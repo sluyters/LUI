@@ -2,10 +2,12 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
-import LeapMotion from 'leapjs';
+// import LeapMotion from 'leapjs';
+import GestureHandler from './gesturehandler' // Added
 import { Fade } from '@material-ui/core';
 
 const fingers = ["#9bcfed", "#B2EBF2", "#80DEEA", "#4DD0E1", "#26C6DA"];
+const paused_fingers = ["#9bed9b", "#b1f0b1", "#80ea80", "#4ce14c", "#25da25"];
 
 const styles = {
     canvas: {
@@ -29,42 +31,39 @@ class Leap extends React.Component {
     }
 
     componentDidMount() {
-        // console.log("Intro leap is mounted")
-        this.leap = LeapMotion.loop((frame) => {
+        this.gestureHandler = new GestureHandler();
 
-            this.setState({
-                frame,
-                hand: frame.hands.length > 0 ? frame.hands[0] : ""
-            });
+        this.gestureHandler.onEachGesture(function (gesture) {
+            console.log(gesture);
+            this.setState({ pause: 4 });
+        }.bind(this));
 
-            this.traceFingers(frame);
-        });
+        this.gestureHandler.onGesture("rhand-uswipe", function () {
+            this.props.handleExit();
+        }.bind(this));
+
+        this.gestureHandler.onGesture("rindex-airtap", function () {
+            this.props.handleClick();
+        }.bind(this));
+
+        this.gestureHandler.onFrame(function (frame) {
+            this.traceFingers(frame.fingers);
+        }.bind(this));
 
         this.timer = setInterval(() => {
-            // check for unlocking motion
-            if (this.state.hand) {
-                if (this.state.hand.palmVelocity[1] > 400) {
-                    this.props.handleExit();
-                }
-                var { frame, hand, indexFinger } = this.state;
-                if (indexFinger.vel < -300) {
-                    console.log("CLICK")
-                    this.props.handleClick();
-                    // gestureDetected = true;
-                }
-            }
-
-            
+            if (this.state.pause > 0) {
+                this.setState({ pause: this.state.pause - 1 });
+            }     
         }, 100);
     }
 
     componentWillUnmount() {
         console.log("Intro leap is unmounted")
         clearInterval(this.timer);
-        this.leap.disconnect();
+        this.gestureHandler.disconnect();
     }
 
-    traceFingers(frame) {
+    traceFingers(pointables) {
         try {
             // TODO: make canvas and ctx global
             const canvas = this.refs.canvas;
@@ -72,25 +71,26 @@ class Leap extends React.Component {
             canvas.height = canvas.clientHeight;
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const { frame, hand } = this.state;
 
-            if (hand) {
-                hand.fingers.forEach((pointable) => {
-                    const color = fingers[pointable.type];
-                    const position = pointable.stabilizedTipPosition;
-                    const normalized = frame.interactionBox.normalizePoint(position);
-                    const x = ctx.canvas.width * normalized[0];
-                    const y = ctx.canvas.height * (1 - normalized[1]);
-                    const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
-                    this.drawCircle([x, y], radius, color, pointable.type === 1);
-                    if (pointable.type == 1) {
-                        this.setState({
-                            indexFinger: { x, y, vel: pointable.tipVelocity[2] }
-                        })
-                    }
-                });
-            }
-        } catch (err) { }
+            const { pause } = this.state;
+
+            pointables.forEach((pointable) => {
+                const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
+                const normalized = pointable.normalizedPosition;
+                const x = ctx.canvas.width * normalized[0];
+                const y = ctx.canvas.height * (1 - normalized[1]);
+                const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
+                this.drawCircle([x, y], radius, color, pointable.type === 1);
+
+                if (pointable.type == 1) {
+                    this.setState({
+                        indexFinger: { x, y, vel: pointable.tipVelocity[2] }
+                    })
+                }
+            });
+        } catch (err) {
+            // console.log("ERR", err);
+        }
     }
 
     drawCircle(center, radius, color, fill) {
