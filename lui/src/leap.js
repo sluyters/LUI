@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
-import GestureHandler from './gesturehandler' // Added
+import GestureHandler from './gesture-interface/app-interface' // Added
 
 // const canvas = this.refs.canvas;
 // canvas.width = canvas.clientWidth;

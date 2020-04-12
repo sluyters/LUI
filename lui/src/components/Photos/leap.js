@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
 import LeapMotion from 'leapjs';
 import Home from '@material-ui/icons/Home';
-
+import GestureHandler from '../../gesture-interface/app-interface' // Added
 
 const fingers = ["#9bcfedBB", "#B2EBF2CC", "#80DEEABB", "#4DD0E1BB", "#26C6DABB"];
 const left_fingers = ["#d39bed", "#e1b1f1", "#ca80ea", "#b74ce1", "#a425da"];
@@ -25,14 +25,11 @@ class Leap extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            frame: {},
-            rightHand: "",
-            leftHand: "",
+            hand: false,
             indexFinger: "",
-            hovered: "",
-            clicked: "",
-            amiclicked:"",
-            pinch: "",
+            hovered: -1,
+            clicked: -1,
+            amiclicked: "",
             pause: 4,
             lhovered: "",
             intervalId1: 0,
@@ -42,28 +39,90 @@ class Leap extends React.Component {
         }
     }
     componentWillReceiveProps(nextProps) {
-        this.setState({ amiclicked: nextProps.amiclicked });  
-      }
+        this.setState({ amiclicked: nextProps.amiclicked });
+    }
 
     componentDidMount() {
-        this.leap = LeapMotion.loop((frame) => {
-            let hands = frame.hands;
-            let rightHand = "";
-            let leftHand = "";
-            for (const hand of hands) {
-                if (hand.type === "left") {
-                    leftHand = hand;
-                } else {
-                    rightHand = hand;
-                }
+
+        this.gestureHandler = new GestureHandler();
+
+        this.gestureHandler.onEachGesture(function (gesture) {
+            console.log(gesture);
+            this.setState({ pause: 4 });
+        }.bind(this));
+
+        this.gestureHandler.onGesture("rhand-open", function () {
+            this.props.handleZoom("in");
+        }.bind(this));
+
+        this.gestureHandler.onGesture("rhand-close", function () {
+            this.props.handleZoom("out");
+        }.bind(this));
+
+        this.gestureHandler.onGesture("rhand-lswipe", function () {
+            this.props.handleSwipe("left");
+        }.bind(this));
+
+        this.gestureHandler.onGesture("rhand-rswipe", function () {
+            this.props.handleSwipe("right");
+        }.bind(this));
+
+        this.gestureHandler.onGesture("rhand-uswipe", function () {
+            let clicked = this.state.clicked;
+            if (clicked != -1) {
+                clicked = -1;
+                this.setState({ clicked });
+
             }
-            this.setState({
-                frame,
-                rightHand,
-                leftHand
-            });
-            this.traceFingers(frame);
-        });
+            this.props.handleSwipeUp();
+        }.bind(this));
+
+        this.gestureHandler.onGesture("rindex-airtap", function () {
+            var hovered = this.state.hovered;
+            if (hovered != -1) {
+                const clicked = hovered;
+                this.props.handleClick(clicked);
+                this.setState({ clicked: clicked, hovered: -1});
+            }
+        }.bind(this));
+
+        this.gestureHandler.onGesture("rhand-crotate", function () {
+            this.props.handleRotate("clockwise");
+        }.bind(this));
+
+        this.gestureHandler.onGesture("rhand-acrotate", function () {
+            this.props.handleRotate("anti-clockwise");
+        }.bind(this));
+
+        this.gestureHandler.onFrame(function (frame) {
+            if (frame.fingers.length != 0) {
+                this.setState({ hand: true });
+            } else {
+                this.setState({ hand: false });
+            }
+            this.traceFingers(frame.fingers);
+        }.bind(this));
+
+        // this.leap = LeapMotion.loop((frame) => {
+        //     let hands = frame.hands;
+        //     let rightHand = "";
+        //     //let leftHand = "";
+        //     for (const hand of hands) {
+        //         if (hand.type === "left") {
+        //             //leftHand = hand;
+        //         } else {
+        //             rightHand = hand;
+        //         }
+        //     }
+        //     // this.setState({
+        //     //     rightHand,
+        //     //     leftHand
+        //     // });
+        //     this.setState({
+        //         rightHand
+        //     });
+        //     //this.traceFingers(frame);
+        // });
 
         this.timer = setInterval(() => {
 
@@ -71,76 +130,16 @@ class Leap extends React.Component {
                 this.setState({ pause: this.state.pause - 1 });
             }
 
-            if (this.state.rightHand) {
-                var { rightHand, indexFinger, clicked, hovered, pause } = this.state;
+            if (this.state.hand) {
+                var { clicked, hovered } = this.state;
 
                 // CONTINUOUS GESTURES
 
-                if (!clicked&&!this.state.amiclicked) {
-                  hovered = this.checkHover();
-                  this.setState({ hovered });
-                  this.props.handleHover(hovered);
+                if (clicked == -1 && !this.state.amiclicked) {
+                    hovered = this.checkHover();
+                    this.setState({ hovered });
+                    this.props.handleHover(hovered);
                 }
-
-                // DISCRETE GESTURES
-
-                let gestureDetected = false;
-
-                if (pause === 0) {
-                    // swipe left
-                    if (rightHand.palmVelocity[0] < -400) {
-                        this.props.handleSwipe("left");
-                        gestureDetected = true;
-                    }
-
-                    // swipe right
-                    else if (rightHand.palmVelocity[0] > 400) {
-                        this.props.handleSwipe("right");
-                        gestureDetected = true;
-                    }
-
-                    // swipe up
-                    else if (rightHand.palmVelocity[1] > 400) {
-                        if (clicked) {
-                          clicked = "";
-                          this.setState({ clicked });
-                          
-                        }
-                        this.props.handleSwipeUp();
-                        gestureDetected = true;
-                    }
-
-                    // bloom
-                    // if (!zoomed && hovered && pinch > 0.7 && rightHand.pinchStrength < 0.3) {
-                    //     this.props.handleBloom();
-                    //     gestureDetected = true;
-                    // }
-
-                    // airtap
-                    if (hovered && indexFinger.vel < -300) {
-                        console.log("CLICK")
-                        const clicked = hovered
-                        this.props.handleClick(clicked);
-                        this.setState({ clicked: clicked, hovered: "" });
-                        gestureDetected = true;
-                    }
-                }
-
-                // pause if gesture detected
-                if (gestureDetected) {
-                  this.setState({ pause: 4 });
-                }
-            }
-
-            if (this.state.leftHand) {
-                let { leftHand } = this.state;
-
-                // knob
-                // if (leftHand) {
-                //     const roll = this.rollToVolume(leftHand.roll());
-                //     if (zoomed)
-                //         this.props.handleKnob(zoomed, roll);
-                // }
             }
 
         }, 100);
@@ -148,10 +147,11 @@ class Leap extends React.Component {
 
     componentWillUnmount() {
         clearInterval(this.timer);
-        this.leap.disconnect();
+        this.gestureHandler.disconnect();
+        //this.leap.disconnect();
     }
 
-    traceFingers(frame) {
+    traceFingers(pointables) {
         try {
             // TODO: make canvas and ctx global
             const canvas = this.refs.canvas;
@@ -160,103 +160,133 @@ class Leap extends React.Component {
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const { rightHand, leftHand, pause } = this.state;
+            const { pause } = this.state;
 
-            // RIGHT HAND 
-            if (rightHand) {
-                rightHand.fingers.forEach((pointable) => {
-                    const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
-                    const position = pointable.stabilizedTipPosition;
-                    const normalized = frame.interactionBox.normalizePoint(position);
-                    const x = ctx.canvas.width * normalized[0];
-                    const y = ctx.canvas.height * (1 - normalized[1]);
-                    const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
-                    this.drawCircle([x, y], radius, color, pointable.type === 1);
-                    if (pointable.type == 1) {
-                        this.setState({
-                            indexFinger: { x, y, vel: pointable.tipVelocity[2] }
-                        })
-                    }
-                });
-            }
-
-            // LEFT HAND RADIAL MENU 
-            if (leftHand) { 
-                var color1 = "rgba(50,50,50,.5)"; //color for buttons
-                var color2 = "rgba(250,250,250,.9)"; //color for growing indicator 
-
-                const position = leftHand.stabilizedPalmPosition;
-                const normalized = frame.interactionBox.normalizePoint(position);
+            pointables.forEach((pointable) => {
+                const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
+                const normalized = pointable.normalizedPosition;
                 const x = ctx.canvas.width * normalized[0];
                 const y = ctx.canvas.height * (1 - normalized[1]);
-                
-                if (this.state.lhovered == 'menu1' && leftHand.grabStrength > .8) { //first menu button growing indicator only grows if hand is closed
-                    clearInterval(this.state.intervalId1); 
-                    this.setState({intervalId1: 0}) //reset timer when rendered
-                    var intervalId1 = setInterval(this.timer, 1000); 
-                    this.setState({intervalId1: intervalId1, intervalId2: 0, intervalId3: 0, intervalId4: 0}); //set this timer and reset others
-                    // this.setState()
-                }
-                else if (this.state.lhovered == 'menu2' && leftHand.grabStrength > .8) {
-                    clearInterval(this.state.intervalId2);
-                    this.setState({intervalId2: 0})
-                    var intervalId2 = setInterval(this.timer, 1000);
-                    this.setState({intervalId2: intervalId2, intervalId1: 0, intervalId3: 0, intervalId4: 0});
-                }
-                else if (this.state.lhovered == 'menu3' && leftHand.grabStrength > .8) {
-                    clearInterval(this.state.intervalId3);
-                    this.setState({intervalId3: 0})
-                    var intervalId3 = setInterval(this.timer, 1000);
-                    this.setState({intervalId3: intervalId3, intervalId2: 0, intervalId1: 0, intervalId4: 0});
-                }
-                else if (this.state.lhovered == 'menu4' && leftHand.grabStrength > .8) {
-                    clearInterval(this.state.intervalId4);
-                    this.setState({intervalId4: 0})
-                    var intervalId4 = setInterval(this.timer, 1000);
-                    this.setState({intervalId4: intervalId4, intervalId2: 0, intervalId3: 0, intervalId1: 0});
-                }
-                else {
-                    this.setState({lhovered: ""})
-                    this.setState({intervalId4: 0, intervalId2: 0, intervalId3: 0, intervalId1: 0});
-                }
-                if (this.state.intervalId1 % 65 == 0 && this.state.intervalId1 != 0) { //fire this function when timer hits maximum
-                    // this.darken()
-                }
-                //TODO: add other 3 menu buttons, and implement functions to fire
-                this.drawCircle(this.getCoords(x,y,324,250), this.state.intervalId1 % 65, color2, true); //growing circle
-                this.drawCircle(this.getCoords(x,y,324,250), 65, color1, true); //static circle
+                const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
+                this.drawCircle([x, y], radius, color, pointable.type === 1);
 
-                this.drawCircle(this.getCoords(x,y,288,250), this.state.intervalId2 % 65, color2, true);
-                this.drawCircle(this.getCoords(x,y,288,250), 65, color1, true);
-
-                this.drawCircle(this.getCoords(x,y,252,250), this.state.intervalId3 % 65, color2, true);
-                this.drawCircle(this.getCoords(x,y,252,250), 65, color1, true);
-
-                this.drawCircle(this.getCoords(x,y,216,250), this.state.intervalId4 % 65, color2, true);
-                this.drawCircle(this.getCoords(x,y,216,250), 65, color1, true);
-                this.drawLabel(this.getCoords(x,y,216,250))
-
-                var rollval = -1*leftHand.roll()*180/Math.PI //gets angle of the hand
-                this.drawPointer(this.getCoords(x,y,rollval,250), 5, "rgba(250,250,250,.5)") //pointer circle
-                this.setState({ leftPalm: { x, y }});
-                if (-23 > rollval && rollval > -50) { //detects which circle is hovered by the angle of the hand
-                    this.setState({lhovered: 'menu1'})
+                if (pointable.type == 1) {
+                    this.setState({
+                        indexFinger: { x, y, vel: pointable.tipVelocity[2] }
+                    })
                 }
-                else if (-60 > rollval && rollval > -82) {
-                    this.setState({lhovered: 'menu2'})
-                }
-                else if (-95 > rollval && rollval > -120) {
-                    this.setState({lhovered: 'menu3'})
-                }
-                else if (-135 > rollval && rollval > -155) {
-                    this.setState({lhovered: 'menu4'})
-                }
-                
-            }
-
-        } catch (err) { }
+            });
+        } catch (err) {
+            // console.log("ERR", err);
+        }
     }
-    
+
+    // traceFingers(frame) {
+    //     try {
+    //         // TODO: make canvas and ctx global
+    //         const canvas = this.refs.canvas;
+    //         canvas.width = canvas.clientWidth;
+    //         canvas.height = canvas.clientHeight;
+    //         const ctx = canvas.getContext("2d");
+    //         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    //         const { rightHand, leftHand, pause } = this.state;
+
+    //         // RIGHT HAND 
+    //         if (rightHand) {
+    //             rightHand.fingers.forEach((pointable) => {
+    //                 const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
+    //                 const position = pointable.stabilizedTipPosition;
+    //                 const normalized = frame.interactionBox.normalizePoint(position);
+    //                 const x = ctx.canvas.width * normalized[0];
+    //                 const y = ctx.canvas.height * (1 - normalized[1]);
+    //                 const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
+    //                 this.drawCircle([x, y], radius, color, pointable.type === 1);
+    //                 if (pointable.type == 1) {
+    //                     this.setState({
+    //                         indexFinger: { x, y, vel: pointable.tipVelocity[2] }
+    //                     })
+    //                 }
+    //             });
+    //         }
+
+    //         // LEFT HAND RADIAL MENU 
+    //         if (leftHand) {
+    //             var color1 = "rgba(50,50,50,.5)"; //color for buttons
+    //             var color2 = "rgba(250,250,250,.9)"; //color for growing indicator 
+
+    //             const position = leftHand.stabilizedPalmPosition;
+    //             const normalized = frame.interactionBox.normalizePoint(position);
+    //             const x = ctx.canvas.width * normalized[0];
+    //             const y = ctx.canvas.height * (1 - normalized[1]);
+
+    //             if (this.state.lhovered == 'menu1' && leftHand.grabStrength > .8) { //first menu button growing indicator only grows if hand is closed
+    //                 clearInterval(this.state.intervalId1);
+    //                 this.setState({ intervalId1: 0 }) //reset timer when rendered
+    //                 var intervalId1 = setInterval(this.timer, 1000);
+    //                 this.setState({ intervalId1: intervalId1, intervalId2: 0, intervalId3: 0, intervalId4: 0 }); //set this timer and reset others
+    //                 // this.setState()
+    //             }
+    //             else if (this.state.lhovered == 'menu2' && leftHand.grabStrength > .8) {
+    //                 clearInterval(this.state.intervalId2);
+    //                 this.setState({ intervalId2: 0 })
+    //                 var intervalId2 = setInterval(this.timer, 1000);
+    //                 this.setState({ intervalId2: intervalId2, intervalId1: 0, intervalId3: 0, intervalId4: 0 });
+    //             }
+    //             else if (this.state.lhovered == 'menu3' && leftHand.grabStrength > .8) {
+    //                 clearInterval(this.state.intervalId3);
+    //                 this.setState({ intervalId3: 0 })
+    //                 var intervalId3 = setInterval(this.timer, 1000);
+    //                 this.setState({ intervalId3: intervalId3, intervalId2: 0, intervalId1: 0, intervalId4: 0 });
+    //             }
+    //             else if (this.state.lhovered == 'menu4' && leftHand.grabStrength > .8) {
+    //                 clearInterval(this.state.intervalId4);
+    //                 this.setState({ intervalId4: 0 })
+    //                 var intervalId4 = setInterval(this.timer, 1000);
+    //                 this.setState({ intervalId4: intervalId4, intervalId2: 0, intervalId3: 0, intervalId1: 0 });
+    //             }
+    //             else {
+    //                 this.setState({ lhovered: "" })
+    //                 this.setState({ intervalId4: 0, intervalId2: 0, intervalId3: 0, intervalId1: 0 });
+    //             }
+    //             if (this.state.intervalId1 % 65 == 0 && this.state.intervalId1 != 0) { //fire this function when timer hits maximum
+    //                 // this.darken()
+    //             }
+    //             //TODO: add other 3 menu buttons, and implement functions to fire
+    //             this.drawCircle(this.getCoords(x, y, 324, 250), this.state.intervalId1 % 65, color2, true); //growing circle
+    //             this.drawCircle(this.getCoords(x, y, 324, 250), 65, color1, true); //static circle
+
+    //             this.drawCircle(this.getCoords(x, y, 288, 250), this.state.intervalId2 % 65, color2, true);
+    //             this.drawCircle(this.getCoords(x, y, 288, 250), 65, color1, true);
+
+    //             this.drawCircle(this.getCoords(x, y, 252, 250), this.state.intervalId3 % 65, color2, true);
+    //             this.drawCircle(this.getCoords(x, y, 252, 250), 65, color1, true);
+
+    //             this.drawCircle(this.getCoords(x, y, 216, 250), this.state.intervalId4 % 65, color2, true);
+    //             this.drawCircle(this.getCoords(x, y, 216, 250), 65, color1, true);
+    //             this.drawLabel(this.getCoords(x, y, 216, 250))
+
+    //             var rollval = -1 * leftHand.roll() * 180 / Math.PI //gets angle of the hand
+    //             this.drawPointer(this.getCoords(x, y, rollval, 250), 5, "rgba(250,250,250,.5)") //pointer circle
+    //             this.setState({ leftPalm: { x, y } });
+    //             if (-23 > rollval && rollval > -50) { //detects which circle is hovered by the angle of the hand
+    //                 this.setState({ lhovered: 'menu1' })
+    //             }
+    //             else if (-60 > rollval && rollval > -82) {
+    //                 this.setState({ lhovered: 'menu2' })
+    //             }
+    //             else if (-95 > rollval && rollval > -120) {
+    //                 this.setState({ lhovered: 'menu3' })
+    //             }
+    //             else if (-135 > rollval && rollval > -155) {
+    //                 this.setState({ lhovered: 'menu4' })
+    //             }
+
+    //         }
+
+    //     } catch (err) { }
+    // }
+
     darken() {
         const canvas = this.refs.canvas;
         const ctx = canvas.getContext("2d");
@@ -266,7 +296,7 @@ class Leap extends React.Component {
         ctx.fill();
     }
 
-    getCoords(x, y, degrees, radius) { 
+    getCoords(x, y, degrees, radius) {
         /** Calculates the coordinates for the center of a button relative
          * to the center of the radial menu.
          * 
@@ -276,15 +306,15 @@ class Leap extends React.Component {
          * 
          * returns: coordinates of the center of the button
          */
-        const newx = x + radius*Math.cos(degrees*Math.PI/180)
-        const newy = y + radius*Math.sin(degrees*Math.PI/180)
+        const newx = x + radius * Math.cos(degrees * Math.PI / 180)
+        const newy = y + radius * Math.sin(degrees * Math.PI / 180)
         return [newx, newy]
     }
 
     clamp(val, min, max) {
         return Math.min(Math.max(val, min), max);
-      }
-  
+    }
+
     rollToVolume(roll) {
         return this.clamp(2 - roll, 0, 3) * 100 / 3;
     }
@@ -294,7 +324,7 @@ class Leap extends React.Component {
         const ctx = canvas.getContext("2d");
         ctx.font = "40px Helvetica";
         // const coords = this.getCoords(x, y, )
-        ctx.fillText("Home", center[0]-50, center[1]+15);
+        ctx.fillText("Home", center[0] - 50, center[1] + 15);
     }
 
     drawArc(center, radius, color, percent) {
@@ -322,7 +352,7 @@ class Leap extends React.Component {
             ctx.stroke();
         }
     }
-    
+
     drawPointer(center, radius, color, fill) { //draw small circle that points to what is hovered
         const canvas = this.refs.canvas;
         const ctx = canvas.getContext("2d");
@@ -344,24 +374,27 @@ class Leap extends React.Component {
         const photos = this.props.photos;
         const { x, y } = this.state.indexFinger;
         for (let i = 0; i < photos.length; i++) {
-            if (photos[i]){
-                const dims = ReactDOM.findDOMNode(photos[i]).getBoundingClientRect();
+            if (photos[i] && photos[i].current) {
+                //const dims = ReactDOM.findDOMNode(photos[i]).getBoundingClientRect();
+                const dims = photos[i].current.getBoundingClientRect(); // idk
                 if (x > dims.left && x < dims.right &&
                     y > dims.top && y < dims.bottom) {
-                    return ("photo" + String(i + 1));
+                    //return ("photo" + String(i + 1));
+                    return i; // idk
                 }
             }
         }
-        return ("");
+        //return ("");
+        return (-1); // idk
     }
 
     timer() {
         // setState method is used to update the state
-        this.setState({ currentCount: this.state.currentCount -1 });
-     }
+        this.setState({ currentCount: this.state.currentCount - 1 });
+    }
 
     render() {
-        console.log(this.state.amiclicked);
+        //console.log(this.state.amiclicked);
 
         const { classes } = this.props;
 
@@ -377,7 +410,9 @@ Leap.propTypes = {
     photos: PropTypes.array,
     handleHover: PropTypes.func,
     handleSwipe: PropTypes.func,
-    handleExit: PropTypes.func
+    handleExit: PropTypes.func,
+    handleRotate: PropTypes.func,        // Added - rotation
+    handleZoom: PropTypes.func          // Added - zoom
 };
 
 // TODO: better default values

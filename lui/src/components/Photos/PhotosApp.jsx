@@ -102,20 +102,50 @@ const styles = {
     margin: 'auto',
   },
 
+  maincontent: {
+    position: 'absolute',
+    bottom: '50px',
+    top: '50px',
+    left: 0,
+    right: 0,
+    overflow: 'hidden'
+  },
+
+  controlbar: {
+    boxSizing: 'border-box',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 0,
+    padding: '5px',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50px'
+  },
+
+  control: {
+    flex: '1 1 0'
+  },
+
   stepper: {
     // display: 'auto',
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    width: '8em',
+    margin: 'auto',
+    width: 'fit-content',
+    maxWidth: '100%',
+    // marginLeft: 'auto',
+    // marginRight: 'auto',
+    //width: '8em',
     backgroundColor: 'rgb(0,0,0,0)',
-    position: "absolute",
-    bottom: "1px",
+    //position: "absolute",
+    //bottom: "1px",
   },
 
   button: {
-    position: 'fixed',
-    bottom: '10px',
-    left: '10px',
+    //position: 'fixed',
+    // bottom: '10px',
+    // left: '10px',
     color: "rgba(50,50,50,0.8)",
   },
 
@@ -160,6 +190,10 @@ const photos = ['https://images.unsplash.com/photo-1531752074002-abf991376d04?ix
                 'https://images.unsplash.com/photo-1531752074002-abf991376d04?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=d9a0a2b6b4212fc234d319be9c87c615&auto=format&fit=crop&w=800&q=60',
                 'https://images.unsplash.com/photo-1531700968341-bd114e5006ec?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=0e3b02f32d781454cb7f97a78657a5b4&auto=format&fit=crop&w=800&q=60',
                 'https://images.unsplash.com/photo-1533247094082-709d7257cb7b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=03d0175eccb69353cf2cc77869902e4f&auto=format&fit=crop&w=800&q=60',
+                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60']
 
 //firebase
@@ -183,26 +217,32 @@ class PhotosApp extends Component {
   constructor(props) {
     super(props);
 
+    let refs = [];
+    for (let i = 0; i < photos.length; i++) {
+      refs.push(React.createRef());
+    }
+
     this.state = {
-      photos: [],
-      hovered: "",
+      refs: refs,
+      numPreviewPages: Math.ceil(refs.length / 8),
+      numPages: null,
+      hovered: -1,
       clicked: -1,
       index: 0,
       exit: false,
-      amiclicked:false
+      amiclicked:false,
+      rotation: 45, // Added - rotate image
+      zoom: 1.0
     };
 
     this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidMount() {
-    this.getPhotos();
-    
     //google home
     currentRef.update({"current":"photos"});
     var something = this;
     currentRef.on('value', function(snapshot) {
-      console.log(snapshot.val());
       var db = snapshot.val();
       var name = db.goto;
       if (db.update){
@@ -230,15 +270,17 @@ class PhotosApp extends Component {
       }
     });
   }
-  
 
-  getPhotos = () => {
-    const photos = [this.refs.photo1, this.refs.photo2, this.refs.photo3, this.refs.photo4,
-    this.refs.photo5, this.refs.photo6, this.refs.photo7, this.refs.photo8,
-    this.refs.photo9, this.refs.photo10, this.refs.photo11, this.refs.photo12,
-    this.refs.photo13, this.refs.photo14, this.refs.photo15, this.refs.photo16
-    ];
-    this.setState({ photos })
+
+
+  rotate(){
+    let newRotation = this.state.rotation + 45;
+    if(newRotation >= 360){
+      newRotation =- 360;
+    }
+    this.setState({
+      rotation: newRotation,
+    })
   }
 
   handleHover = (photo) => {
@@ -246,12 +288,10 @@ class PhotosApp extends Component {
     currentRef.update({"hovered": photo}); 
   }
 
-  handleClick = (photo) => {
-    const index = parseInt(photo.slice(5)) - 1;
-    this.setState({ clicked: index })
-    this.setState({ amiclicked: true })
-    // const clicked = photo
-    // this.setState({ clicked: clicked, hovered: "" });
+  handleClick = (photoId) => {
+    this.setState({ rotation: 0 });
+    this.setState({ clicked: photoId });
+    this.setState({ amiclicked: true });
   }
 
   handleExit = () => {
@@ -260,36 +300,67 @@ class PhotosApp extends Component {
     })
   }
 
-  handleSwipe = (dir) => {
-    let { clicked } = this.state;
+  // Added - rotation
+  handleRotate = (dir) => {
+    let { rotation } = this.state;
 
+    if (dir === "clockwise") {
+      this.setState({
+        rotation: rotation + 90
+      })
+    } else {
+      this.setState({
+        rotation: rotation - 90
+      })
+    }
+  }
+
+  // Added - zoom
+  handleZoom = (type) => {
+    let { zoom } = this.state;
+    if (type === "out" && zoom > 1.0) {
+      this.setState({
+        zoom: zoom / 2
+      })
+    } else if (type === "in" && zoom < 8.0) {
+      this.setState({
+        zoom: zoom * 2
+      })
+    }
+  }
+
+  handleSwipe = (dir) => {
+    let { clicked, refs, index, numPreviewPages } = this.state; 
+    this.setState({ rotation: 0 })    // Added - rotation
     if (dir === "left") {
       console.log("swipe left");
-      if (clicked != -1 && clicked < 15) {
-        this.setState({ clicked: clicked + 1 })
-      } else {
-        this.setState({ index: 1 })
+      if (clicked != -1) {
+        this.setState({ clicked: (clicked < refs.length - 1) ? clicked + 1 : clicked })
+      } else if (index < numPreviewPages - 1) {
+        this.setState({ index: index + 1 })
       }
     } else {
       console.log("swipe right");
-      if (clicked != -1 && clicked > 0) {
-        this.setState({ clicked: clicked - 1 })
-      } else {
-        this.setState({ index: 0 })
+      if (clicked != -1) {
+        this.setState({ clicked: (clicked > 0) ? clicked - 1 : clicked })
+      } else if (index > 0) {
+        this.setState({ index: index -1 })
       }
     }
   }
 
   handleNext = () => {
-    this.setState(state => ({
-      index: 1,
-    }));
+    let { index, numPreviewPages } = this.state;
+    if (index < numPreviewPages - 1) {
+      this.setState({ index: index + 1 });
+    }
   };
 
   handleBack = () => {
-    this.setState(state => ({
-      index: 0,
-    }));
+    let { index } = this.state;
+    if (index > 0) {
+      this.setState({ index: index - 1 });
+    }
   };
 
   handleSwipeUp = () => {
@@ -297,7 +368,6 @@ class PhotosApp extends Component {
     if (clicked != -1) {
       this.setState({ clicked: -1 });
       this.setState({ amiclicked: false });
-      this.getPhotos();
     } else {
       this.setState({ exit: true });
     }
@@ -305,26 +375,29 @@ class PhotosApp extends Component {
 
   renderPhoto(index) { //renders a photo in the grid
     const { classes } = this.props;
-    const { hovered } = this.state;
-    const ref = "photo" + String(index + 1);
+    const { hovered, refs } = this.state;
+    const ref = refs[index]
 
     return (<Grid item className={classes.cell} ref={ref} xs={12} sm={3}>
       <img
-        onMouseEnter={() => { this.setState({hovered: ref}) }}
-        onMouseLeave={() => { this.setState({hovered: ""}) }}
-        onClick={() => { this.handleClick(hovered) }}
-        className={hovered === ref ? classNames(classes.image, classes.hovered) : classes.image}
+        onMouseEnter={() => { this.setState({hovered: index}) }}
+        onMouseLeave={() => { this.setState({hovered: -1}) }}
+        onClick={() => { this.handleClick(index) }} 
+        className={hovered === index ? classNames(classes.image, classes.hovered) : classes.image}
         src={ photos[index] } />
     </Grid>);
   }
 
   renderFullScreenPhoto(index) { //renders the selected photo in full screen view
     const { classes } = this.props;
+    const { rotation, zoom } =  this.state; // Added - rotate image - zoom image
 
     return (<div className={classes.carousel} justify={"center"}>
       <Grid container spacing={0} justify={"center"} >
         <Grid item className={classes.cell} xs={12} sm={12}>
           <img
+            style={{transform: `rotate(${rotation}deg) scale(${zoom})`}} // Added - rotate image
+            onClick={() => { this.rotate() }}
             className={classNames(classes.image, classes.zoomed)}
             src={ photos[index] } />
         </Grid>
@@ -334,49 +407,17 @@ class PhotosApp extends Component {
 
   renderFullScreen(index) { //renders the full screen gallery view for the photos
     const { classes } = this.props;
-    console.log(this.state);
+    const { refs } = this.state;
+
+    let fullScreenPhotos = [];
+    for (let i = 0; i < refs.length; i++) {
+      fullScreenPhotos.push(this.renderFullScreenPhoto(i));
+    }
+
     return (<div>
       <SwipeableViews className={classes.gallery} index={index} >
-        { this.renderFullScreenPhoto(0) }
-        { this.renderFullScreenPhoto(1) }
-        { this.renderFullScreenPhoto(2) }
-        { this.renderFullScreenPhoto(3) }
-        { this.renderFullScreenPhoto(4) }
-        { this.renderFullScreenPhoto(5) }
-        { this.renderFullScreenPhoto(6) }
-        { this.renderFullScreenPhoto(7) }
-        { this.renderFullScreenPhoto(8) }
-        { this.renderFullScreenPhoto(9) }
-        { this.renderFullScreenPhoto(10) }
-        { this.renderFullScreenPhoto(11) }
-        { this.renderFullScreenPhoto(12) }
-        { this.renderFullScreenPhoto(13) }
-        { this.renderFullScreenPhoto(14) }
-        { this.renderFullScreenPhoto(15) }
+        {fullScreenPhotos}
       </SwipeableViews>
-      <div className = "stepper">
-      {/* Stepper at the bottom of the view: */}
-        <MobileStepper
-          variant="dots"
-          steps={16}
-          position="bottom"
-          activeStep={index}
-          className={classes.stepper}
-          classes={{ dots: classes.dots }}
-          nextButton={
-            <Button size="small" onClick={()=>this.handleSwipe("left")} disabled={index === 15}>
-              <KeyboardArrowRight />
-              {/* {theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />} */}
-            </Button>
-          }
-          backButton={
-            <Button size="small" onClick={()=>this.handleSwipe("right")} disabled={index === 0}>
-              {/* {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />} */}
-              <KeyboardArrowLeft />
-            </Button>
-          }
-        />
-      </div>
       {/* Exit button: */}
       <Button onClick={() => this.handleSwipeUp()}  className={classes.xbutton}> 
         <Clear/>
@@ -384,71 +425,98 @@ class PhotosApp extends Component {
     </div>);
   }
 
-  renderPhotos() { //renders the full grid of photos
+  renderPhotos() {
     const { classes } = this.props;
-    
-    return (<div>`
+    const { index, refs, numPreviewPages } = this.state;
+    let pages = [];
+    let rows = [];
+    let previews = [];
+    var i;
+    for (i = 0; i < refs.length; i++) {
+      previews.push(this.renderPhoto(i));
+      if ((i + 1) % 4 == 0) {
+        rows.push(<Grid container className={classes.row} spacing={0} justify={"center"} >
+          {previews}
+        </Grid>);
+        previews = [];
+      }
+      if ((i + 1) % 8 == 0) {
+        pages.push(<div className={classes.carousel} justify={"center"}>
+          {rows}
+        </div>);
+        rows = [];
+      }
+    }
+    if ((refs.length % 8) != 0) { 
+      if ((refs.length % 4) != 0) { 
+        rows.push(<Grid container className={classes.row} spacing={0} justify={"center"} >
+          {previews}
+        </Grid>);
+      }
+      pages.push(<div className={classes.carousel} justify={"center"}>
+        {rows}
+      </div>);
+    }
+
+    return (<div>
       <div>
-        <SwipeableViews className={classes.gallery} index={this.state.index} onTransitionEnd={this.getPhotos}>
-
-          <div className={classes.carousel} justify={"center"}>
-            <Grid container className={classes.row} spacing={0} justify={"center"} >
-              { this.renderPhoto(0) }
-              { this.renderPhoto(1) }
-              { this.renderPhoto(2) }
-              { this.renderPhoto(3) }
-            </Grid>
-
-            <Grid container className={classes.row} spacing={0} justify={"center"}>
-              { this.renderPhoto(4) }
-              { this.renderPhoto(5) }
-              { this.renderPhoto(6) }
-              { this.renderPhoto(7) }
-            </Grid>
-          </div>
-
-          <div className={classes.carousel}>
-            <Grid container className={classes.row} spacing={0} justify={"center"} >
-              { this.renderPhoto(8) }
-              { this.renderPhoto(9) }
-              { this.renderPhoto(10) }
-              { this.renderPhoto(11) }
-            </Grid>
-
-            <Grid container className={classes.row} spacing={0} justify={"center"}>
-              { this.renderPhoto(12) }
-              { this.renderPhoto(13) }
-              { this.renderPhoto(14) }
-              { this.renderPhoto(15) }
-            </Grid>
-          </div>
+        <SwipeableViews className={classes.gallery} index={index}>
+          {pages}
         </SwipeableViews>
       </div>
+    </div>);
+  }
 
-      {/* Stepper at the bottom of the page used to view and change pages */}
-      <div className = "stepper">
+  renderStepper() {
+    const { classes } = this.props;
+    const { index, numPreviewPages } = this.state;
+
+    return (numPreviewPages <= 1) ? "" : (<div className = "stepper">
+      <MobileStepper
+        variant="dots"
+        steps={numPreviewPages}
+        position="bottom"
+        activeStep={index}
+        className={classes.stepper}
+        classes={{ dots: classes.dots }}
+        nextButton={
+          <Button size="small" onClick={this.handleNext} disabled={index >= numPreviewPages - 1}>
+            <KeyboardArrowRight />
+          </Button>
+        }
+        backButton={
+          <Button size="small" onClick={this.handleBack} disabled={index <= 0}>
+            <KeyboardArrowLeft />
+          </Button>
+        }
+      />
+    </div>);
+  }
+
+  renderFullScreenStepper() {
+    const { classes } = this.props;
+    const { clicked, refs } = this.state;
+
+    return (<div className = "stepper">
         <MobileStepper
           variant="dots"
-          steps={2}
+          steps={refs.length}
           position="bottom"
-          activeStep={this.state.index}
+          activeStep={clicked}
           className={classes.stepper}
           classes={{ dots: classes.dots }}
           nextButton={
-            <Button size="small" onClick={this.handleNext} disabled={this.state.index === 1}>
+            <Button size="small" onClick={()=>this.handleSwipe("left")} disabled={clicked >= refs.length - 1}>
               <KeyboardArrowRight />
-              {/* {theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />} */}
             </Button>
           }
           backButton={
-            <Button size="small" onClick={this.handleBack} disabled={this.state.index === 0}>
-              {/* {theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />} */}
+            <Button size="small" onClick={()=>this.handleSwipe("right")} disabled={clicked <= 0}>
               <KeyboardArrowLeft />
             </Button>
           }
         />
-      </div>
-    </div>);
+      </div>);
   }
 
   render() {
@@ -460,33 +528,45 @@ class PhotosApp extends Component {
       console.log("EXITING")
       return <Redirect to={{ pathname: "/Home", state: {page: "home"} }} />
     }
-    console.log(this.state.clicked);
 
     return (
       <Wrapper isMounted={this.props.isMounted} exit={this.state.exit}>
         <div>
           <div className={classes.container} justify={"center"}>
             <Leap
-              photos={this.state.photos}
+              //photos={this.state.photos}
+              photos={this.state.refs}
               handleHover={this.handleHover}
               handleClick={this.handleClick}
-              amiclicked = {this.state.amiclicked}
-              
+              amiclicked = {this.state.amiclicked}              
               handleSwipe={this.handleSwipe}
               handleSwipeUp={this.handleSwipeUp}
+              handleRotate={this.handleRotate}
+              handleZoom={this.handleZoom}
             />
 
             {/* Handling whether to render a full screen photo or not */}
-            { clicked != -1 ? this.renderFullScreen(clicked) : this.renderPhotos() }
+            <div className={classes.maincontent}>
+              { clicked != -1 ? this.renderFullScreen(clicked) : this.renderPhotos() }
+            </div>
 
-            {/* Home button: */}
-            <Button onClick={() => this.handleExit()}  className={classes.button}>
-              <Home/>
-            </Button>
-
+            {/* Control bar */}
+            <div className={classes.controlbar}>
+              {/* Home button: */}
+              <div className={classes.control}>
+                <Button onClick={() => this.handleExit()}  className={classes.button}>
+                  <Home/>
+                </Button>
+              </div>
+              <div className={classes.control}>
+                { clicked != -1 ? this.renderFullScreenStepper() : this.renderStepper() }
+              </div>
+              <div className={classes.control}>
+              </div>
+            </div>
           </div>
-          </div>
-    </Wrapper>
+        </div>
+      </Wrapper>
     );
   }
 }

@@ -3,7 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
 // import LeapMotion from 'leapjs';
-import GestureHandler from './gesturehandler' // Added
+import GestureHandler from '../../gesture-interface/app-interface' // Added
 import { Fade } from '@material-ui/core';
 
 const fingers = ["#9bcfed", "#B2EBF2", "#80DEEA", "#4DD0E1", "#26C6DA"];
