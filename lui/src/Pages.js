@@ -7,7 +7,8 @@ import Videos from './components/Videos/VideosApp.js';
 import GestureKeyboard from './components/GestureKeyboard/GestureKeyboardApp.jsx';
 import CandyCrush from './components/CandyCrush/CandyCrushApp';
 import Model from './components/Model/ModelApp';
-import Prismatic from './components/Prismatic/PrismaticApp'
+import Prismatic from './components/Prismatic/PrismaticApp';
+import PDFs from './components/PDFs/PDFsApp'
 
 class Pages extends Component {
 
@@ -21,6 +22,7 @@ class Pages extends Component {
           <Route path='/Home' component={App}/>
           <Route path='/Photos' component={Photos}/>
           <Route path='/Videos' component={Videos}/>
+          <Route path='/PDFs' component={PDFs}/>
           <Route path='/GestureKeyboard' component={GestureKeyboard}/>
           <Route path='/CandyCrush' component={CandyCrush}/>
           <Route path='/Model' component={Model} />
