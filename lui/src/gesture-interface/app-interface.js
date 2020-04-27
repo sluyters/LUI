@@ -6,12 +6,17 @@ class GestureHandler {
         this.handlers = {};
         this.forEachHandler = (gesture) => {};
         this.frameHandler = (frame) => {};
+        this.isConnected = false;
 
         // Connect to the gesture recognizer.
         this.client = new W3CWebSocket('ws://127.0.0.1:6442');
         this.client.onopen = function() {
             console.log('WebSocket Client Connected');
-        };
+            this.isConnected = true;
+            for (const gesture of Object.keys(this.handlers)) {
+                this.client.send(JSON.stringify({ 'addGesture': gesture }));
+            }
+        }.bind(this);
         this.client.onmessage = function(event) {
             let data = JSON.parse(event.data);
             if (data.hasOwnProperty('gesture')) {
@@ -64,6 +69,9 @@ class GestureHandler {
      * @param {gestureCallback} callback - The callback that handles the gesture.
      */
     onGesture(gesture, callback) {
+        if (this.isConnected) {
+            this.client.send(JSON.stringify({ 'addGesture': gesture }));
+        }
         this.handlers[gesture] = callback;
     }
 
@@ -74,6 +82,9 @@ class GestureHandler {
     removeGestureHandler(gesture) {
         if (this.handlers.hasOwnProperty(gesture)) {
             delete this.handlers[gesture];
+            if (this.isConnected) {
+                this.client.send(JSON.stringify({ 'removeGesture': gesture }));
+            }
         }
     }
 

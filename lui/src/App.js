@@ -88,13 +88,13 @@ const Wrapper = glamorous.div(props => ({
   zIndex: 5
 }))
 const firebaseConfig = {
-  apiKey: "AIzaSyDjM37_DSv2RvPQzl5YiVzmgRHfpd4rJFU",
-  authDomain: "lui-medialab.firebaseapp.com",
-  databaseURL: "https://lui-medialab.firebaseio.com",
-  projectId: "lui-medialab",
-  storageBucket: "lui-medialab.appspot.com",
-  messagingSenderId: "247289397118",
-  appId: "1:247289397118:web:eb2bcb0076d4bb4d"
+  apiKey: "AIzaSyCuy4pAfTSoNnVt9OHryXeMBm6T4BaJkL0",
+  authDomain: "master-thesis-lui.firebaseapp.com",
+  databaseURL: "https://master-thesis-lui.firebaseio.com",
+  projectId: "master-thesis-lui",
+  storageBucket: "master-thesis-lui.appspot.com",
+  messagingSenderId: "670995532611",
+  appId: "1:670995532611:web:947999a7e4317e08f8fdf6"
 };
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);

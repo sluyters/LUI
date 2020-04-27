@@ -51,23 +51,23 @@ class Leap extends React.Component {
             this.setState({ pause: 4 });
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand-open", function () {
+        this.gestureHandler.onGesture("rhand_open", function () {
             this.props.handleZoom("in");
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand-close", function () {
+        this.gestureHandler.onGesture("rhand_close", function () {
             this.props.handleZoom("out");
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand-lswipe", function () {
+        this.gestureHandler.onGesture("rhand_lswipe", function () {
             this.props.handleSwipe("left");
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand-rswipe", function () {
+        this.gestureHandler.onGesture("rhand_rswipe", function () {
             this.props.handleSwipe("right");
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand-uswipe", function () {
+        this.gestureHandler.onGesture("rhand_uswipe", function () {
             let clicked = this.state.clicked;
             if (clicked != -1) {
                 clicked = -1;
@@ -77,7 +77,7 @@ class Leap extends React.Component {
             this.props.handleSwipeUp();
         }.bind(this));
 
-        this.gestureHandler.onGesture("rindex-airtap", function () {
+        this.gestureHandler.onGesture("rindex_airtap", function () {
             var hovered = this.state.hovered;
             if (hovered != -1) {
                 const clicked = hovered;
@@ -86,11 +86,11 @@ class Leap extends React.Component {
             }
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand-crotate", function () {
+        this.gestureHandler.onGesture("rhand_crotate", function () {
             this.props.handleRotate("clockwise");
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand-acrotate", function () {
+        this.gestureHandler.onGesture("rhand_acrotate", function () {
             this.props.handleRotate("anti-clockwise");
         }.bind(this));
 

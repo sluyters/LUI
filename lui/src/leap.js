@@ -42,11 +42,11 @@ class Leap extends React.Component {
             this.setState({ pause: 4 });
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand-uswipe", function () {
+        this.gestureHandler.onGesture("rhand_uswipe", function () {
             this.props.handleSwipeUp();
         }.bind(this));
 
-        this.gestureHandler.onGesture("rindex-airtap", function () {
+        this.gestureHandler.onGesture("rindex_airtap", function () {
             var { hovered } = this.state;
             this.setState({ clicked: hovered })
             this.props.handleClick(hovered);
