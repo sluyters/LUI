@@ -331,7 +331,7 @@ class PDFsApp extends Component {
       console.log("swipe left");
       if (clicked != -1) {
         this.setState({ currentPage: (currentPage < numPages) ? currentPage + 1 : currentPage })
-      } else if (index < numPreviewPages) {
+      } else if (index < numPreviewPages - 1) {
         this.setState({ index: index + 1 })
       }
     } else {

@@ -232,7 +232,8 @@ class PhotosApp extends Component {
       exit: false,
       amiclicked:false,
       rotation: 45, // Added - rotate image
-      zoom: 1.0
+      zoom: 1.0,
+      translation: { x: 0.0, y: 0.0 }
     };
 
     this.handleClick = this.handleClick.bind(this);
@@ -280,6 +281,7 @@ class PhotosApp extends Component {
     }
     this.setState({
       rotation: newRotation,
+      translation: {x: 10, y: 10}
     })
   }
 
@@ -301,32 +303,47 @@ class PhotosApp extends Component {
   }
 
   // Added - rotation
-  handleRotate = (dir) => {
+  // handleRotate = (dir) => {
+  //   let { rotation } = this.state;
+
+  //   if (dir === "clockwise") {
+  //     this.setState({
+  //       rotation: rotation + 90
+  //     })
+  //   } else {
+  //     this.setState({
+  //       rotation: rotation - 90
+  //     })
+  //   }
+  // }
+
+  handleRotate = (angle) => {
     let { rotation } = this.state;
 
-    if (dir === "clockwise") {
-      this.setState({
-        rotation: rotation + 90
-      })
-    } else {
-      this.setState({
-        rotation: rotation - 90
-      })
-    }
+    this.setState({
+      rotation: rotation + 180 * angle / 3.14
+    })
   }
 
   // Added - zoom
-  handleZoom = (type) => {
-    let { zoom } = this.state;
-    if (type === "out" && zoom > 1.0) {
-      this.setState({
-        zoom: zoom / 2
-      })
-    } else if (type === "in" && zoom < 8.0) {
-      this.setState({
-        zoom: zoom * 2
-      })
+  handleZoom = (pinch, handTranslation) => {
+    let { zoom, clicked, translation } = this.state;
+    if (clicked != -1) {
+      zoom = ((pinch - 1) * 1.2) + 1;
+      if (zoom < 0.4) {
+        zoom = 0.4;
+      } else if (zoom > 4) {
+        zoom = 4;
+      }
+      translation.x = handTranslation[0] * 10;
+      translation.y = handTranslation[1] * -10;
+      this.setState({ zoom, translation })
     }
+  }
+
+  handleTranslate = (translation) => {
+    console.log("translate");
+    console.log(translation);
   }
 
   handleSwipe = (dir) => {
@@ -390,13 +407,13 @@ class PhotosApp extends Component {
 
   renderFullScreenPhoto(index) { //renders the selected photo in full screen view
     const { classes } = this.props;
-    const { rotation, zoom } =  this.state; // Added - rotate image - zoom image
+    const { rotation, zoom, translation } =  this.state; // Added - rotate image - zoom image
 
     return (<div className={classes.carousel} justify={"center"}>
       <Grid container spacing={0} justify={"center"} >
         <Grid item className={classes.cell} xs={12} sm={12}>
           <img
-            style={{transform: `rotate(${rotation}deg) scale(${zoom})`}} // Added - rotate image
+            style={{transform: `rotate(${rotation}deg) scale(${zoom}) translate(${translation.x}px,${translation.y}px)`}} // Added - scale / translate / rotate image
             onClick={() => { this.rotate() }}
             className={classNames(classes.image, classes.zoomed)}
             src={ photos[index] } />
@@ -543,6 +560,7 @@ class PhotosApp extends Component {
               handleSwipeUp={this.handleSwipeUp}
               handleRotate={this.handleRotate}
               handleZoom={this.handleZoom}
+              handleTranslate={this.handleTranslate}
             />
 
             {/* Handling whether to render a full screen photo or not */}
