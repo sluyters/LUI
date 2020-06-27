@@ -281,7 +281,6 @@ class PhotosApp extends Component {
     }
     this.setState({
       rotation: newRotation,
-      translation: {x: 10, y: 10}
     })
   }
 
