@@ -69,12 +69,12 @@ class Leap extends React.Component {
             var { clicked, hovered } = this.state;
             if (clicked == -1 && hovered != -1) {
                 // gestureHandler.onPose("grab", function (data) {
-                //     //this.props.handleRotate(data.rotation);
-                //     //this.props.handleZoom(data.pinch);
+                //     console.log("grab")
+                //     this.props.handleRotate(data.rotation);
                 // }.bind(this));
-    
                 gestureHandler.onPose("pinch", function (data) {
-                    this.props.handleZoom(data.pinch, data.translation);
+                    this.props.handlePinch(data.pinch, data.translation, data.rotation);
+                    //this.props.handleRotate(data.rotation);
                 }.bind(this));
                 clicked = hovered;
                 this.props.handleClick(clicked);
@@ -193,8 +193,8 @@ Leap.propTypes = {
     handleHover: PropTypes.func,
     handleSwipe: PropTypes.func,
     handleExit: PropTypes.func,
-    handleRotate: PropTypes.func,        // Added - rotation
-    handleZoom: PropTypes.func,          // Added - zoom
+    handleRotate: PropTypes.func,        
+    handlePinch: PropTypes.func,         
     handleTranslate: PropTypes.func
 };
 

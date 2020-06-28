@@ -290,7 +290,7 @@ class PhotosApp extends Component {
   }
 
   handleClick = (photoId) => {
-    this.setState({ rotation: 0 });
+    this.setState({ rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } })
     this.setState({ clicked: photoId });
     this.setState({ amiclicked: true });
   }
@@ -318,25 +318,23 @@ class PhotosApp extends Component {
 
   handleRotate = (angle) => {
     let { rotation } = this.state;
-
-    this.setState({
-      rotation: rotation + 180 * angle / 3.14
-    })
+    rotation += 180 * (angle * 1.2) / 3.14;
+    this.setState({ rotation })
   }
 
-  // Added - zoom
-  handleZoom = (pinch, handTranslation) => {
-    let { zoom, clicked, translation } = this.state;
+  handlePinch = (pinch, handTranslation, handRotation) => {
+    let { clicked, zoom, translation, rotation } = this.state;
     if (clicked != -1) {
-      zoom = ((pinch - 1) * 1.2) + 1;
+      zoom *= ((pinch - 1) * 1.2) + 1;
       if (zoom < 0.4) {
         zoom = 0.4;
       } else if (zoom > 4) {
         zoom = 4;
       }
-      translation.x = handTranslation[0] * 10;
-      translation.y = handTranslation[1] * -10;
-      this.setState({ zoom, translation })
+      translation.x += handTranslation[0] * 5;
+      translation.y += handTranslation[1] * -5;
+      rotation += 180 * (handRotation * 1.2) / 3.14;
+      this.setState({ zoom, translation, rotation })
     }
   }
 
@@ -347,7 +345,7 @@ class PhotosApp extends Component {
 
   handleSwipe = (dir) => {
     let { clicked, refs, index, numPreviewPages } = this.state; 
-    this.setState({ rotation: 0 })    // Added - rotation
+    this.setState({ rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } })    // Added - rotation
     if (dir === "left") {
       console.log("swipe left");
       if (clicked != -1) {
@@ -406,16 +404,17 @@ class PhotosApp extends Component {
 
   renderFullScreenPhoto(index) { //renders the selected photo in full screen view
     const { classes } = this.props;
-    const { rotation, zoom, translation } =  this.state; // Added - rotate image - zoom image
-
+    const { rotation, zoom, translation } =  this.state; 
     return (<div className={classes.carousel} justify={"center"}>
       <Grid container spacing={0} justify={"center"} >
         <Grid item className={classes.cell} xs={12} sm={12}>
-          <img
-            style={{transform: `rotate(${rotation}deg) scale(${zoom}) translate(${translation.x}px,${translation.y}px)`}} // Added - scale / translate / rotate image
-            onClick={() => { this.rotate() }}
-            className={classNames(classes.image, classes.zoomed)}
-            src={ photos[index] } />
+          <div style={{transform: `translate(${translation.x}px,${translation.y}px)`}} > 
+            <img
+              style={{transform: `rotate(${rotation}deg) scale(${zoom})`}} 
+              onClick={() => { this.rotate() }}
+              className={classNames(classes.image, classes.zoomed)}
+              src={ photos[index] } />
+          </div>
         </Grid>
       </Grid>
     </div>);
@@ -558,7 +557,7 @@ class PhotosApp extends Component {
               handleSwipe={this.handleSwipe}
               handleSwipeUp={this.handleSwipeUp}
               handleRotate={this.handleRotate}
-              handleZoom={this.handleZoom}
+              handlePinch={this.handlePinch}
               handleTranslate={this.handleTranslate}
             />
 
