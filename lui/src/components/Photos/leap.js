@@ -68,13 +68,11 @@ class Leap extends React.Component {
         gestureHandler.onGesture("rindex_airtap", function () {
             var { clicked, hovered } = this.state;
             if (clicked == -1 && hovered != -1) {
-                // gestureHandler.onPose("grab", function (data) {
-                //     console.log("grab")
-                //     this.props.handleRotate(data.rotation);
-                // }.bind(this));
+                gestureHandler.onPose("grab", function (data) {
+                    this.props.handleRotate(data.rotation);
+                }.bind(this));
                 gestureHandler.onPose("pinch", function (data) {
-                    this.props.handlePinch(data.pinch, data.translation, data.rotation);
-                    //this.props.handleRotate(data.rotation);
+                    this.props.handlePinch(data.pinch, data.translation);
                 }.bind(this));
                 clicked = hovered;
                 this.props.handleClick(clicked);

@@ -316,14 +316,14 @@ class PhotosApp extends Component {
   //   }
   // }
 
-  handleRotate = (angle) => {
+  handleRotate = (handRotation) => {
     let { rotation } = this.state;
-    rotation += 180 * (angle * 1.2) / 3.14;
+    rotation += 180 * (handRotation * 1.5) / 3.14;
     this.setState({ rotation })
   }
 
-  handlePinch = (pinch, handTranslation, handRotation) => {
-    let { clicked, zoom, translation, rotation } = this.state;
+  handlePinch = (pinch, handTranslation) => {
+    let { clicked, zoom, translation } = this.state;
     if (clicked != -1) {
       zoom *= ((pinch - 1) * 1.2) + 1;
       if (zoom < 0.4) {
@@ -333,8 +333,7 @@ class PhotosApp extends Component {
       }
       translation.x += handTranslation[0] * 5;
       translation.y += handTranslation[1] * -5;
-      rotation += 180 * (handRotation * 1.2) / 3.14;
-      this.setState({ zoom, translation, rotation })
+      this.setState({ zoom, translation })
     }
   }
 
@@ -553,7 +552,7 @@ class PhotosApp extends Component {
               photos={this.state.refs}
               handleHover={this.handleHover}
               handleClick={this.handleClick}
-              amiclicked = {this.state.amiclicked}              
+              amiclicked={this.state.amiclicked}              
               handleSwipe={this.handleSwipe}
               handleSwipeUp={this.handleSwipeUp}
               handleRotate={this.handleRotate}
