@@ -251,7 +251,6 @@ class PDFsApp extends Component {
       if(db.clicked){
         currentRef.update({"clicked":false});
         something.gestureDetected = true;
-        console.log(db.hovered);
         something.handleClick(db.hovered);
       }
       if (db.back){
@@ -283,11 +282,10 @@ class PDFsApp extends Component {
   }
 
   handleClick = (pdfId) => {
-    console.log(`click ${pdfId}`)
     this.setState({ clicked: pdfId })
     this.setState({ amiclicked: true })
     this.setState({ currentPage: 1 })
-    this.setState({ rotation: 0 })    // Added - rotation
+    this.setState({ rotation: 0 }) 
   }
 
   handleExit = () => {
@@ -296,10 +294,8 @@ class PDFsApp extends Component {
     })
   }
 
-  // Added - rotation
   handleRotate = (dir) => {
     let { rotation } = this.state;
-
     if (dir === "clockwise") {
       this.setState({
         rotation: rotation + 90
@@ -311,17 +307,16 @@ class PDFsApp extends Component {
     }
   }
 
-  // Added - zoom
-  handleZoom = (type) => {
-    let { zoom } = this.state;
-    if (type === "out" && zoom > 1.0) {
-      this.setState({
-        zoom: zoom / 2
-      })
-    } else if (type === "in" && zoom < 8.0) {
-      this.setState({
-        zoom: zoom * 2
-      })
+  handlePinch = (pinch) => {
+    let { clicked, zoom } = this.state;
+    if (clicked != -1) {
+      zoom *= ((pinch - 1) * 1.2) + 1;
+      if (zoom < 0.4) {
+        zoom = 0.4;
+      } else if (zoom > 4) {
+        zoom = 4;
+      }
+      this.setState({ zoom })
     }
   }
 
@@ -503,7 +498,6 @@ class PDFsApp extends Component {
     const { classes } = this.props;
     const { clicked } = this.state;
 
-    console.log(this.state.hovered)
     // Handling whether to go back to the Home page or display the PDFs page
     if (this.state.exit) {
       console.log("EXITING")
@@ -522,7 +516,7 @@ class PDFsApp extends Component {
               handleSwipe={this.handleSwipe}
               handleSwipeUp={this.handleSwipeUp}
               handleRotate={this.handleRotate}
-              handleZoom={this.handleZoom}
+              handlePinch={this.handlePinch}
             />
 
             {/* Handling whether to render a full screen pdf or not */}

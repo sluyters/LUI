@@ -59,7 +59,7 @@ class Leap extends React.Component {
             let clicked = this.state.clicked;
             if (clicked != -1) {
                 gestureHandler.removePoseHandler("grab");
-                gestureHandler.removePoseHandler("point-index");
+                gestureHandler.removePoseHandler("pinch");
                 clicked = -1;
                 this.setState({ clicked });
             }

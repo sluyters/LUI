@@ -318,7 +318,7 @@ class PhotosApp extends Component {
 
   handleRotate = (handRotation) => {
     let { rotation } = this.state;
-    rotation += 180 * (handRotation * 1.5) / 3.14;
+    rotation += 180 * handRotation / 3.14;
     this.setState({ rotation })
   }
 

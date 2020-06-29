@@ -42,33 +42,32 @@ class Leap extends React.Component {
     }
 
     componentDidMount() {
-
-        this.gestureHandler = new GestureHandler();
-
-        this.gestureHandler.onEachGesture(function (gesture) {
+        let gestureHandler = new GestureHandler();
+        this.gestureHandler = gestureHandler;
+        gestureHandler.onEachGesture(function (gesture) {
             console.log(gesture);
             this.setState({ pause: 4 });
         }.bind(this));
+        // gestureHandler.onGesture("rhand_open", function () {
+        //     this.props.handleZoom("in");
+        // }.bind(this));
 
-        this.gestureHandler.onGesture("rhand_open", function () {
-            this.props.handleZoom("in");
-        }.bind(this));
+        // gestureHandler.onGesture("rhand_close", function () {
+        //     this.props.handleZoom("out");
+        // }.bind(this));
 
-        this.gestureHandler.onGesture("rhand_close", function () {
-            this.props.handleZoom("out");
-        }.bind(this));
-
-        this.gestureHandler.onGesture("rhand_lswipe", function () {
+        gestureHandler.onGesture("rhand_lswipe", function () {
             this.props.handleSwipe("left");
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand_rswipe", function () {
+        gestureHandler.onGesture("rhand_rswipe", function () {
             this.props.handleSwipe("right");
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand_uswipe", function () {
+        gestureHandler.onGesture("rhand_uswipe", function () {
             let clicked = this.state.clicked;
             if (clicked != -1) {
+                gestureHandler.removePoseHandler("pinch");
                 clicked = -1;
                 this.setState({ clicked });
 
@@ -76,25 +75,27 @@ class Leap extends React.Component {
             this.props.handleSwipeUp();
         }.bind(this));
 
-        this.gestureHandler.onGesture("rindex_airtap", function () {
+        gestureHandler.onGesture("rindex_airtap", function () {
             var hovered = this.state.hovered;
             if (hovered != -1) {
-                console.log(hovered);
+                gestureHandler.onPose("pinch", function (data) {
+                    this.props.handlePinch(data.pinch);
+                }.bind(this));
                 const clicked = hovered;
                 this.props.handleClick(clicked);
                 this.setState({ clicked: clicked, hovered: -1});
             }
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand_crotate", function () {
+        gestureHandler.onGesture("rhand_crotate", function () {
             this.props.handleRotate("clockwise");
         }.bind(this));
 
-        this.gestureHandler.onGesture("rhand_acrotate", function () {
+        gestureHandler.onGesture("rhand_acrotate", function () {
             this.props.handleRotate("anti-clockwise");
         }.bind(this));
 
-        this.gestureHandler.onFrame(function (frame) {
+        gestureHandler.onFrame(function (frame) {
             if (frame.fingers.length != 0) {
                 this.setState({ hand: true });
             } else {
@@ -103,38 +104,13 @@ class Leap extends React.Component {
             this.traceFingers(frame.fingers);
         }.bind(this));
 
-        // this.leap = LeapMotion.loop((frame) => {
-        //     let hands = frame.hands;
-        //     let rightHand = "";
-        //     //let leftHand = "";
-        //     for (const hand of hands) {
-        //         if (hand.type === "left") {
-        //             //leftHand = hand;
-        //         } else {
-        //             rightHand = hand;
-        //         }
-        //     }
-        //     // this.setState({
-        //     //     rightHand,
-        //     //     leftHand
-        //     // });
-        //     this.setState({
-        //         rightHand
-        //     });
-        //     //this.traceFingers(frame);
-        // });
-
         this.timer = setInterval(() => {
-
             if (this.state.pause > 0) {
                 this.setState({ pause: this.state.pause - 1 });
             }
-
             if (this.state.hand) {
                 var { clicked, hovered } = this.state;
-
                 // CONTINUOUS GESTURES
-
                 if (clicked == -1 && !this.state.amiclicked) {
                     hovered = this.checkHover();
                     this.setState({ hovered });
@@ -302,8 +278,8 @@ Leap.propTypes = {
     handleHover: PropTypes.func,
     handleSwipe: PropTypes.func,
     handleExit: PropTypes.func,
-    handleRotate: PropTypes.func,        // Added - rotation
-    handleZoom: PropTypes.func          // Added - zoom
+    handleRotate: PropTypes.func,
+    handlePinch: PropTypes.func
 };
 
 // TODO: better default values
