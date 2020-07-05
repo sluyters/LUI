@@ -12,6 +12,8 @@ import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import Home from '@material-ui/icons/Home';
 import Clear from '@material-ui/icons/Clear';
+import FavoriteIcon from '@material-ui/icons/Favorite';
+import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
 
 import { css } from 'glamor';
 import { Transition } from 'react-transition-group';
@@ -228,6 +230,7 @@ class PhotosApp extends Component {
       numPages: null,
       hovered: -1,
       clicked: -1,
+      liked: {},
       index: 0,
       exit: false,
       amiclicked:false,
@@ -301,25 +304,8 @@ class PhotosApp extends Component {
     })
   }
 
-  // Added - rotation
-  // handleRotate = (dir) => {
-  //   let { rotation } = this.state;
-
-  //   if (dir === "clockwise") {
-  //     this.setState({
-  //       rotation: rotation + 90
-  //     })
-  //   } else {
-  //     this.setState({
-  //       rotation: rotation - 90
-  //     })
-  //   }
-  // }
-
   handleRotate = (handRotation) => {
-    let { rotation } = this.state;
-    rotation += 180 * handRotation / 3.14;
-    this.setState({ rotation })
+    this.setState(prevState => ({ rotation: (prevState.rotation + 180 * handRotation / 3.14) }))
   }
 
   handlePinch = (pinch, handTranslation) => {
@@ -340,6 +326,19 @@ class PhotosApp extends Component {
   handleTranslate = (translation) => {
     console.log("translate");
     console.log(translation);
+  }
+
+  handleThumb = (isUp) => {
+    let { clicked, liked } = this.state;
+
+    if (!liked.hasOwnProperty(clicked) || liked[clicked] != isUp) {
+      this.setState(prevState => ({
+        liked: {
+          ...prevState.liked,
+          [clicked]: isUp
+        }
+      }));
+    }
   }
 
   handleSwipe = (dir) => {
@@ -533,6 +532,13 @@ class PhotosApp extends Component {
       </div>);
   }
 
+  renderFavorite() {
+    const { clicked, liked } = this.state;
+    return (<div>
+      { liked.hasOwnProperty(clicked) && liked[clicked] ? <FavoriteIcon/> : <FavoriteBorderIcon/> }
+    </div>);
+  }
+
   render() {
     const { classes } = this.props;
     const { clicked } = this.state;
@@ -558,6 +564,7 @@ class PhotosApp extends Component {
               handleRotate={this.handleRotate}
               handlePinch={this.handlePinch}
               handleTranslate={this.handleTranslate}
+              handleThumb={this.handleThumb}
             />
 
             {/* Handling whether to render a full screen photo or not */}
@@ -577,6 +584,7 @@ class PhotosApp extends Component {
                 { clicked != -1 ? this.renderFullScreenStepper() : this.renderStepper() }
               </div>
               <div className={classes.control}>
+                { clicked != -1 ? this.renderFavorite() : <div></div> }
               </div>
             </div>
           </div>

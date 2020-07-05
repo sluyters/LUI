@@ -60,6 +60,7 @@ class Leap extends React.Component {
             if (clicked != -1) {
                 gestureHandler.removePoseHandler("grab");
                 gestureHandler.removePoseHandler("pinch");
+                gestureHandler.removePoseHandler("thumb");
                 clicked = -1;
                 this.setState({ clicked });
             }
@@ -73,6 +74,18 @@ class Leap extends React.Component {
                 }.bind(this));
                 gestureHandler.onPose("pinch", function (data) {
                     this.props.handlePinch(data.pinch, data.translation);
+                }.bind(this));
+                gestureHandler.onPose("thumb", function (data) {
+                    let thumbUp = data.thumbVector[1] > 40;
+                    let thumbDown = data.thumbVector[1] < -40;
+                    if (thumbUp) {
+                        console.log("THUMB UP");
+                        this.props.handleThumb(true);
+                    }
+                    if (thumbDown) {
+                        console.log("THUMB DOWN");
+                        this.props.handleThumb(false);
+                    }
                 }.bind(this));
                 clicked = hovered;
                 this.props.handleClick(clicked);
@@ -193,7 +206,8 @@ Leap.propTypes = {
     handleExit: PropTypes.func,
     handleRotate: PropTypes.func,        
     handlePinch: PropTypes.func,         
-    handleTranslate: PropTypes.func
+    handleTranslate: PropTypes.func,
+    handleThumb: PropTypes.func
 };
 
 // TODO: better default values
