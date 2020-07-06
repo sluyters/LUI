@@ -243,12 +243,12 @@ class App extends Component {
           </Grid>
           
           <Grid className={classes.rowContainer} container>
-            <Grid ref="card4" item xs={4}
+            {/* <Grid ref="card4" item xs={4}
               onClick={() => { this.setState({ clicked: "card4" }) }}
               onMouseEnter={() => { this.setState({ hovered: "card4" }) }}
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
               <CandyCrush hovered={this.state.hovered === "card4"} clicked={false} />
-            </Grid>
+            </Grid> */}
             <Grid ref="card5" item xs={4}
               onClick={() => { this.setState({ clicked: "card5" }) }}
               onMouseEnter={() => { this.setState({ hovered: "card5" }) }}
