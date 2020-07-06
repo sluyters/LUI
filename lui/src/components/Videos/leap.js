@@ -2,7 +2,8 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
-import LeapMotion from 'leapjs';
+//import LeapMotion from 'leapjs';
+import GestureHandler from '../../gesture-interface/app-interface' // Added
 
 const fingers = ["#9bcfed", "#B2EBF2", "#80DEEA", "#4DD0E1", "#26C6DA"];
 const paused_fingers = ["#9bed9b", "#b1f0b1", "#80ea80", "#4ce14c", "#25da25"];
@@ -23,155 +24,95 @@ class Leap extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            frame: {},
-            rightHand: "",
-            leftHand: "",
             indexFinger: "",
-            thumb: "",
-            zoomed: "",
             hovered: "",
-            pinch: "",
-            pause: 4
+            zoomed: "",
+            pause: 4,
         }
     }
 
     componentDidMount() {
-        console.log("Videos leap is mounted")
-        this.leap = LeapMotion.loop((frame) => {
-            let hands = frame.hands;
-            let rightHand = "";
-            let leftHand = "";
-            for (const hand of hands) {
-                if (hand.type === "left") {
-                    leftHand = hand;
-                } else {
-                    rightHand = hand;
+        let gestureHandler = new GestureHandler();
+        this.gestureHandler = gestureHandler;
+        gestureHandler.onEachGesture(function (gesture) {
+            console.log(gesture);
+            this.setState({ pause: 4 });
+        }.bind(this));
+        gestureHandler.onGesture("rhand_lswipe", function () {
+            this.props.handleSwipe("left");
+            let zoomed = this.state.zoomed;
+            if (zoomed) {
+                const index = parseInt(zoomed.slice(5));
+                const newIndex = Math.min(this.props.videos.length, index + 1)
+                zoomed = "video" + String(newIndex);
+                console.log("SWIPE LEFT (leap) " + zoomed)
+                this.setState({ zoomed });
+            }
+        }.bind(this));
+        gestureHandler.onGesture("rhand_rswipe", function () {
+            this.props.handleSwipe("right");
+            let zoomed = this.state.zoomed;
+            if (zoomed) {
+                const index = parseInt(zoomed.slice(5));
+                const newIndex = Math.max(1, index - 1)
+                zoomed = "video" + String(newIndex);
+                console.log("SWIPE RIGHT (leap) " + zoomed)
+                this.setState({ zoomed });
+            }
+        }.bind(this));
+        gestureHandler.onGesture("rhand_uswipe", function () {
+            let zoomed = this.state.zoomed;
+            if (zoomed) {
+                zoomed = "";
+                gestureHandler.removePoseHandler("point-index");
+                this.setState({ zoomed });
+            }
+            this.props.handleSwipeUp();
+        }.bind(this));
+        gestureHandler.onGesture("rindex_airtap", function () {
+            var { zoomed, hovered } = this.state;
+            if (hovered && !zoomed) { // zoom in
+                zoomed = hovered;
+                this.props.handleZoom(zoomed);
+                this.setState({ zoomed, hovered: "" });
+                // Add gesture handler for volume
+                gestureHandler.onPose("point-index", function (data) {
+                    let zoomed = this.state.zoomed;
+                    if (zoomed) {
+                        this.props.handleIndex(zoomed, data.translation[1]);
+                    }
+                }.bind(this));
+            } else if (zoomed) {  // play video
+                console.log("PLAY (leap) " + zoomed)
+                this.props.handleClick(zoomed);
+            }
+        }.bind(this));
+        this.gestureHandler.onFrame(function (frame) {
+            var { zoomed, hovered } = this.state;
+            this.traceFingers(frame.fingers);
+            if (frame.fingers.length != 0) {
+                if (!zoomed) {
+                    hovered = this.checkHover();
+                    console.log(hovered)
+                    this.setState({ hovered });
+                    this.props.handleHover(hovered);
                 }
             }
-            this.setState({
-                frame,
-                rightHand,
-                leftHand
-            });
-            this.traceFingers(frame);
-        });
+        }.bind(this));
 
         this.timer = setInterval(() => {
-
             if (this.state.pause > 0) {
                 this.setState({ pause: this.state.pause - 1 });
-            }
-
-            if (this.state.rightHand) {
-                var { zoomed, hovered, indexFinger, thumb, rightHand, pinch, pause } = this.state;
-
-                // CONTINUOUS GESTURES
-
-                // hovering
-                if (!zoomed) {
-                  hovered = this.checkHover();
-                  this.setState({ hovered });
-                  this.props.handleHover(hovered);
-                }
-
-                // DISCRETE GESTURES
-                let gestureDetected = false;
-
-                if (pause === 0) {
-                    // swipe left
-                    const palmVelocity = rightHand.palmVelocity[0];
-                    if (palmVelocity < -400) {
-                        this.props.handleSwipe("left");
-                        if (zoomed) {
-                          const index = parseInt(zoomed.slice(5));
-                          const newIndex = Math.min(this.props.videos.length, index + 1)
-                          zoomed = "video" + String(newIndex);
-                          this.setState({ zoomed });
-                        }
-                        gestureDetected = true;
-                    }
-
-                    // swipe right
-                    else if (palmVelocity > 400) {
-                        this.props.handleSwipe("right");
-                        if (zoomed) {
-                          const index = parseInt(zoomed.slice(5));
-                          const newIndex = Math.min(1, index - 1)
-                          zoomed = "video" + String(newIndex);
-                          this.setState({ zoomed } );
-                        }
-                        gestureDetected = true;
-                    }
-
-                    // swipe up
-                    else if (rightHand.palmVelocity[1] > 400) {
-                        if (zoomed) {
-                            zoomed = "";
-                            this.setState({ zoomed });
-                        }
-                        this.props.handleSwipeUp();
-                        gestureDetected = true;
-                    }
-
-                    // bloom
-                    // if (!zoomed && hovered && pinch > 0.7 && rightHand.pinchStrength < 0.3) {
-                    //     zoomed = hovered;
-                    //     this.props.handleZoom(zoomed);
-                    //     this.setState({ zoomed });
-                    //     gestureDetected = true;
-                    // }
-
-                    // airtap
-                    if (indexFinger.vel[2] < -300 && (hovered || zoomed)) {
-                        if (hovered && !zoomed) { // zoom in
-                            zoomed = hovered;
-                            this.props.handleZoom(zoomed);
-                            this.setState({ zoomed, hovered: "" });
-                            gestureDetected = true;
-                        } else if (zoomed) {  // play video
-                            this.props.handleClick(zoomed);
-                            gestureDetected = true;
-                        }
-                    }
-                }
-
-                // update pinch
-                this.setState({ pinch: rightHand.pinchStrength });
-
-                // pause if gesture detected
-                if (gestureDetected) {
-                  this.setState({ pause: 4 });
-                }
-            }
-
-            if (this.state.leftHand) {
-                let { leftHand, hovered, zoomed } = this.state;
-
-                // volume control
-                if (leftHand) {
-                    const roll = this.rollToVolume(leftHand.roll());
-                    // console.log(roll);
-                    if (zoomed)
-                        this.props.handleKnob(zoomed, roll);
-                }
             }
         }, 100);
     }
 
-    getMagnitude(velocity) {
-      const x = velocity[0];
-      const y = velocity[1];
-      const z = velocity[2];
-      return Math.sqrt(x**2 + y**2 + z**2);
-    }
-
     componentWillUnmount() {
-        console.log("Videos leap is unmounted")
         clearInterval(this.timer);
-        this.leap.disconnect();
+        this.gestureHandler.disconnect();
     }
 
-    traceFingers(frame) {
+    traceFingers(pointables) {
         try {
             // TODO: make canvas and ctx global
             const canvas = this.refs.canvas;
@@ -179,63 +120,29 @@ class Leap extends React.Component {
             canvas.height = canvas.clientHeight;
             const ctx = canvas.getContext("2d");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const { rightHand, leftHand, pause } = this.state;
 
-            if (rightHand) {
-                rightHand.fingers.forEach((pointable) => {
-                    const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
-                    const position = pointable.stabilizedTipPosition;
-                    const normalized = frame.interactionBox.normalizePoint(position);
-                    const x = ctx.canvas.width * normalized[0];
-                    const y = ctx.canvas.height * (1 - normalized[1]);
-                    const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
-                    this.drawCircle([x, y], radius, color, pointable.type === 1);
+            const { pause } = this.state;
 
-                    if (pointable.type === 0) {
-                        this.setState({
-                            thumb: { x, y, vel: pointable.tipVelocity }
-                        })
-                    }
-                    if (pointable.type === 1) {
-                        this.setState({
-                            indexFinger: { x, y, vel: pointable.tipVelocity }
-                        })
-                    }
-                });
-            }
-            if (leftHand) {
-                const color = "#888888";
-                const position = leftHand.stabilizedPalmPosition;
-                const normalized = frame.interactionBox.normalizePoint(position);
+            pointables.forEach((pointable) => {
+                const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
+                const normalized = pointable.normalizedPosition;
                 const x = ctx.canvas.width * normalized[0];
                 const y = ctx.canvas.height * (1 - normalized[1]);
-                this.drawCircle([x, y], 75, color, true);
-                this.drawArc([x, y], 90, color, this.rollToVolume(leftHand.roll()) / 100);
+                const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
+                this.drawCircle([x, y], radius, color, pointable.type === 1);
 
-                this.setState({ leftPalm: { x, y }});
-            }
-        } catch (err) { }
+                if (pointable.type == 1) {
+                    this.setState({
+                        indexFinger: { x, y, vel: pointable.tipVelocity[2] }
+                    })
+                }
+            });
+        } catch (err) {
+            // console.log("ERR", err);
+        }
     }
 
-    clamp(val, min, max) {
-      return Math.min(Math.max(val, min), max);
-    }
-
-    rollToVolume(roll) {
-        return this.clamp(2 - roll, 0, 3) * 100 / 3;
-    }
-
-    drawArc(center, radius, color, percent) {
-        const canvas = this.refs.canvas;
-        const ctx = canvas.getContext("2d");
-        ctx.beginPath();
-        ctx.arc(center[0], center[1], radius, 0, percent * 2 * Math.PI);
-        ctx.lineWidth = 10;
-        ctx.strokeStyle = color;
-        ctx.stroke();
-    }
-
-    drawCircle(center, radius, color, fill) {
+    drawCircle(center, radius, color, fill) { //draws a circle
         const canvas = this.refs.canvas;
         const ctx = canvas.getContext("2d");
         ctx.beginPath();
@@ -288,7 +195,8 @@ Leap.propTypes = {
     handleHover: PropTypes.func,
     handleSwipe: PropTypes.func,
     handleExit: PropTypes.func,
-    handleClick: PropTypes.func
+    handleClick: PropTypes.func,
+    handleIndex: PropTypes.func
 };
 
 // TODO: better default values

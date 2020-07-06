@@ -228,17 +228,11 @@ class App extends Component {
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
               <Photos isMounted = {this.state.clicked === "card1"} hovered={this.state.hovered === "card1"} clicked={this.state.clicked === "card1"} />
             </Grid>
-            {/* <Grid ref="card2" item xs={4}
-              onClick={() => { this.setState({ clicked: "card2" }) }}
-              onMouseEnter={() => { this.setState({ hovered: "card2" }) }}
-              onMouseLeave={() => { this.setState({ hovered: "" }) }} >
-              <Videos hovered={this.state.hovered === "card2"} clicked={this.state.clicked === "card2"} />
-            </Grid> */}
             <Grid ref="card2" item xs={4}
               onClick={() => { this.setState({ clicked: "card2" }) }}
               onMouseEnter={() => { this.setState({ hovered: "card2" }) }}
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
-              <PDFs hovered={this.state.hovered === "card2"} clicked={this.state.clicked === "card2"} />
+              <Videos hovered={this.state.hovered === "card2"} clicked={this.state.clicked === "card2"} />
             </Grid>
             <Grid ref="card3" item xs={4}
               onClick={() => { this.setState({ clicked: "card3" }) }}
@@ -247,7 +241,7 @@ class App extends Component {
               <Prismatic hovered={this.state.hovered === "card3"} clicked={false} />
             </Grid>
           </Grid>
-
+          
           <Grid className={classes.rowContainer} container>
             <Grid ref="card4" item xs={4}
               onClick={() => { this.setState({ clicked: "card4" }) }}
@@ -266,6 +260,12 @@ class App extends Component {
               onMouseEnter={() => { this.setState({ hovered: "card6" }) }}
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
               <Model hovered={this.state.hovered === "card6"} clicked={false} />
+            </Grid>
+            <Grid ref="card7" item xs={4}
+              onClick={() => { this.setState({ clicked: "card7" }) }}
+              onMouseEnter={() => { this.setState({ hovered: "card7" }) }}
+              onMouseLeave={() => { this.setState({ hovered: "" }) }} >
+              <PDFs hovered={this.state.hovered === "card7"} clicked={this.state.clicked === "card7"} />
             </Grid>
           </Grid>
         </Grid>

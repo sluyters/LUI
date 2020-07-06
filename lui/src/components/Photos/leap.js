@@ -2,8 +2,6 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
-import LeapMotion from 'leapjs';
-import Home from '@material-ui/icons/Home';
 import GestureHandler from '../../gesture-interface/app-interface' // Added
 
 const fingers = ["#9bcfedBB", "#B2EBF2CC", "#80DEEABB", "#4DD0E1BB", "#26C6DABB"];
@@ -25,21 +23,11 @@ class Leap extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            hand: false,
             indexFinger: "",
             hovered: -1,
             clicked: -1,
-            amiclicked: "",
             pause: 4,
-            lhovered: "",
-            intervalId1: 0,
-            intervalId2: 0,
-            intervalId3: 0,
-            intervalId4: 0,
         }
-    }
-    componentWillReceiveProps(nextProps) {
-        this.setState({ amiclicked: nextProps.amiclicked });
     }
 
     componentDidMount() {
@@ -93,26 +81,20 @@ class Leap extends React.Component {
             }
         }.bind(this));
         this.gestureHandler.onFrame(function (frame) {
-            if (frame.fingers.length != 0) {
-                this.setState({ hand: true });
-            } else {
-                this.setState({ hand: false });
-            }
+            var { clicked, hovered } = this.state;
             this.traceFingers(frame.fingers);
+            if (frame.fingers.length != 0) {
+                if (clicked == -1) {
+                    hovered = this.checkHover();
+                    this.setState({ hovered });
+                    this.props.handleHover(hovered);
+                }
+            }
         }.bind(this));
 
         this.timer = setInterval(() => {
             if (this.state.pause > 0) {
                 this.setState({ pause: this.state.pause - 1 });
-            }
-            if (this.state.hand) {
-                var { clicked, hovered } = this.state;
-                // CONTINUOUS GESTURES
-                if (clicked == -1 && !this.state.amiclicked) {
-                    hovered = this.checkHover();
-                    this.setState({ hovered });
-                    this.props.handleHover(hovered);
-                }
             }
         }, 100);
     }
@@ -180,16 +162,15 @@ class Leap extends React.Component {
                 }
             }
         }
-        return (-1);
+        return -1;
     }
 
-    timer() {
-        // setState method is used to update the state
-        this.setState({ currentCount: this.state.currentCount - 1 });
-    }
+    // timer() {
+    //     // setState method is used to update the state
+    //     this.setState({ currentCount: this.state.currentCount - 1 });
+    // }
 
     render() {
-        //console.log(this.state.amiclicked);
         const { classes } = this.props;
         return (
             <canvas className={classes.canvas} ref="canvas"></canvas>

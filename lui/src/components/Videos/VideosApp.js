@@ -173,18 +173,18 @@ const styles = {
 };
 
 const videos = [
-    {id: 'rnlCGw-0R8g'},
-    {id: 'zw47_q9wbBE'},
-    {id: '7m6J8W6Ib4w'},
-    {id: 'l7uuTnk69Eo'},
-    {id: '6ZfuNTqbHE8'},
-    {id: '_8w9rOpV3gc'},
-    {id: 'c-SE2Qeqj1g'},
-    {id: '-AbaV3nrw6E'},
-    {id: 'FTPmnZVgDjQ'},
-    {id: 'dQw4w9WgXcQ'},
-    {id: 'Xnk4seEHmgw'},
-    {id: '5G1C3aBY62E'}
+    { id: 'rnlCGw-0R8g' },
+    { id: 'zw47_q9wbBE' },
+    { id: '7m6J8W6Ib4w' },
+    { id: 'l7uuTnk69Eo' },
+    { id: '6ZfuNTqbHE8' },
+    { id: '_8w9rOpV3gc' },
+    { id: 'c-SE2Qeqj1g' },
+    { id: '-AbaV3nrw6E' },
+    { id: 'FTPmnZVgDjQ' },
+    { id: 'dQw4w9WgXcQ' },
+    { id: 'Xnk4seEHmgw' },
+    { id: '5G1C3aBY62E' }
 ]
 
 const opts = {
@@ -274,6 +274,7 @@ class VideosApp extends Component {
         } else {
           zoomed = Math.min(videos.length - 1, zoomed + 1);
         }
+        console.log("SWIPE RIGHT (app) " + zoomed)
         this.setState({ zoomed });
       }
       else {
@@ -309,23 +310,19 @@ class VideosApp extends Component {
 
     handleClick = (video) => {
         try{
-            var { playing } = this.state;
+            var { playing, target_dict } = this.state;
             var videoIndex = parseInt(video.slice(5));
             var videoId = videos[videoIndex-1].id;
             console.log("HANDLE CLICK", videoId)
-            console.log(playing)
-            console.log(playing[videoId])
-            if (!this.state.playing[videoId]) {
-              console.log("HERE")
-                this.state.target_dict[videoId].playVideo();
-                console.log("hi")
-                playing[videoId] = true;
-                console.log("PLAY", videoIndex);
+            if (!playing[videoIndex-1]) {
+              playing[videoIndex-1] = true;
+              console.log(target_dict[videoId])
+              target_dict[videoId].playVideo();
+              console.log("PLAY", videoIndex);
             } else {
-              console.log("HERE@")
-                this.state.target_dict[videoId].pauseVideo();
-                playing[videoId] = false;
-                console.log("PAUSE", videoIndex);
+              playing[videoIndex-1] = false;
+              target_dict[videoId].pauseVideo();
+              console.log("PAUSE", videoIndex);
             }
             this.setState({ playing });
         } catch (err) { }
@@ -334,17 +331,24 @@ class VideosApp extends Component {
     handleZoom = (video) => {
       var { zoomed } = this.state;
       console.log("ZOOMED", video);
-
       zoomed = parseInt(video.slice(5)) - 1;
       this.setState({ zoomed, hovered: "" });
     }
 
-    // adjust volume
-    handleKnob = (video, roll) => {
+    handleIndex = (video, translation) => {
       var videoIndex = parseInt(video.slice(5));
       var videoId = videos[videoIndex-1].id;
-      console.log("HANDLE KNOB", videoId, roll)
-      this.state.target_dict[videoId].setVolume(roll);
+      var volume = Math.round(this.state.target_dict[videoId].getVolume() + translation);
+      console.log("HANDLE KNOB", videoId, volume)
+      this.state.target_dict[videoId].setVolume(volume);
+    }
+
+    // adjust volume
+    handleKnob = (video, volume) => {
+      var videoIndex = parseInt(video.slice(5));
+      var videoId = videos[videoIndex-1].id;
+      console.log("HANDLE KNOB", videoId, volume)
+      this.state.target_dict[videoId].setVolume(volume);
     }
 
     handleSwipeUp = () => {
@@ -357,12 +361,12 @@ class VideosApp extends Component {
       }
     }
 
-    _onReady = (event) => {
+    _onReady = (videoId, event) => {
       // access to player in all event handlers via event.target
       event.target.pauseVideo();
       this.setState({playing:[...this.state.playing,false]});
       var new_target_dict = this.state.target_dict;
-      new_target_dict[event.target.b.b.videoId] = event.target;
+      new_target_dict[videoId] = event.target;
       this.setState({target_dict: new_target_dict});
     }
 
@@ -393,7 +397,7 @@ class VideosApp extends Component {
               videoId={videos[index].id}
               key={index}
               opts={opts}
-              onReady={this._onReady}
+              onReady={(event) => this._onReady(videos[index].id, event)}
               onPause={this._onPause}
             />
           </div>
@@ -467,7 +471,7 @@ class VideosApp extends Component {
               videoId={videos[index].id}
               key={index}
               opts={opts}
-              onReady={this._onReady}
+              onReady={(event) => this._onReady(videos[index].id, event)}
               onPause={this._onPause}
             />
           </Grid>
@@ -538,6 +542,7 @@ class VideosApp extends Component {
                 handleClick={this.handleClick}
                 handleZoom={this.handleZoom}
                 handleKnob={this.handleKnob}
+                handleIndex={this.handleIndex}
               />
 
               { zoomed != -1 ? this.renderFullScreen(zoomed) : this.renderVideos() }

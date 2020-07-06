@@ -215,26 +215,26 @@ firebase.initializeApp(firebaseConfig);
 var database = firebase.database();
 var currentRef = database.ref('voice');
 //end
+
+
 class PhotosApp extends Component {
   constructor(props) {
     super(props);
 
-    let refs = [];
+    let photoRefs = [];
     for (let i = 0; i < photos.length; i++) {
-      refs.push(React.createRef());
+      photoRefs.push(React.createRef());
     }
 
     this.state = {
-      refs: refs,
-      numPreviewPages: Math.ceil(refs.length / 8),
-      numPages: null,
+      photoRefs: photoRefs,
+      numPreviewPages: Math.ceil(photoRefs.length / 8),
       hovered: -1,
       clicked: -1,
       liked: {},
       index: 0,
       exit: false,
-      amiclicked:false,
-      rotation: 45, // Added - rotate image
+      rotation: 0, // Added - rotate image
       zoom: 1.0,
       translation: { x: 0.0, y: 0.0 }
     };
@@ -263,7 +263,7 @@ class PhotosApp extends Component {
         something.handleClick(db.hovered);
       }
       if (db.back){
-        if (something.state.amiclicked){
+        if (something.state.clicked != -1){
           something.handleSwipeUp();
         }
         else{
@@ -293,9 +293,7 @@ class PhotosApp extends Component {
   }
 
   handleClick = (photoId) => {
-    this.setState({ rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } })
-    this.setState({ clicked: photoId });
-    this.setState({ amiclicked: true });
+    this.setState({ clicked: photoId, rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } })
   }
 
   handleExit = () => {
@@ -342,21 +340,21 @@ class PhotosApp extends Component {
   }
 
   handleSwipe = (dir) => {
-    let { clicked, refs, index, numPreviewPages } = this.state; 
+    let { clicked, photoRefs, index, numPreviewPages } = this.state; 
     this.setState({ rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } })    // Added - rotation
     if (dir === "left") {
       console.log("swipe left");
       if (clicked != -1) {
-        this.setState({ clicked: (clicked < refs.length - 1) ? clicked + 1 : clicked })
+        this.setState({ clicked: Math.min(photoRefs.length - 1, clicked + 1) })
       } else if (index < numPreviewPages - 1) {
         this.setState({ index: index + 1 })
       }
     } else {
       console.log("swipe right");
       if (clicked != -1) {
-        this.setState({ clicked: (clicked > 0) ? clicked - 1 : clicked })
+        this.setState({ clicked: Math.max(0, clicked - 1) })
       } else if (index > 0) {
-        this.setState({ index: index -1 })
+        this.setState({ index: index - 1 })
       }
     }
   }
@@ -379,7 +377,6 @@ class PhotosApp extends Component {
     let { clicked } = this.state;
     if (clicked != -1) {
       this.setState({ clicked: -1 });
-      this.setState({ amiclicked: false });
     } else {
       this.setState({ exit: true });
     }
@@ -387,8 +384,8 @@ class PhotosApp extends Component {
 
   renderPhoto(index) { //renders a photo in the grid
     const { classes } = this.props;
-    const { hovered, refs } = this.state;
-    const ref = refs[index]
+    const { hovered, photoRefs } = this.state;
+    const ref = photoRefs[index];
 
     return (<Grid item className={classes.cell} ref={ref} xs={12} sm={3}>
       <img
@@ -411,7 +408,7 @@ class PhotosApp extends Component {
               style={{transform: `rotate(${rotation}deg) scale(${zoom})`}} 
               onClick={() => { this.rotate() }}
               className={classNames(classes.image, classes.zoomed)}
-              src={ photos[index] } />
+              src={photos[index]} />
           </div>
         </Grid>
       </Grid>
@@ -420,10 +417,10 @@ class PhotosApp extends Component {
 
   renderFullScreen(index) { //renders the full screen gallery view for the photos
     const { classes } = this.props;
-    const { refs } = this.state;
+    const { photoRefs } = this.state;
 
     let fullScreenPhotos = [];
-    for (let i = 0; i < refs.length; i++) {
+    for (let i = 0; i < photoRefs.length; i++) {
       fullScreenPhotos.push(this.renderFullScreenPhoto(i));
     }
 
@@ -440,12 +437,12 @@ class PhotosApp extends Component {
 
   renderPhotos() {
     const { classes } = this.props;
-    const { index, refs, numPreviewPages } = this.state;
+    const { index, photoRefs } = this.state;
     let pages = [];
     let rows = [];
     let previews = [];
     var i;
-    for (i = 0; i < refs.length; i++) {
+    for (i = 0; i < photoRefs.length; i++) {
       previews.push(this.renderPhoto(i));
       if ((i + 1) % 4 == 0) {
         rows.push(<Grid container className={classes.row} spacing={0} justify={"center"} >
@@ -460,8 +457,8 @@ class PhotosApp extends Component {
         rows = [];
       }
     }
-    if ((refs.length % 8) != 0) { 
-      if ((refs.length % 4) != 0) { 
+    if ((photoRefs.length % 8) != 0) { 
+      if ((photoRefs.length % 4) != 0) { 
         rows.push(<Grid container className={classes.row} spacing={0} justify={"center"} >
           {previews}
         </Grid>);
@@ -508,18 +505,18 @@ class PhotosApp extends Component {
 
   renderFullScreenStepper() {
     const { classes } = this.props;
-    const { clicked, refs } = this.state;
+    const { clicked, photoRefs } = this.state;
 
     return (<div className = "stepper">
         <MobileStepper
           variant="dots"
-          steps={refs.length}
+          steps={photoRefs.length}
           position="bottom"
           activeStep={clicked}
           className={classes.stepper}
           classes={{ dots: classes.dots }}
           nextButton={
-            <Button size="small" onClick={()=>this.handleSwipe("left")} disabled={clicked >= refs.length - 1}>
+            <Button size="small" onClick={()=>this.handleSwipe("left")} disabled={clicked >= photoRefs.length - 1}>
               <KeyboardArrowRight />
             </Button>
           }
@@ -554,11 +551,9 @@ class PhotosApp extends Component {
         <div>
           <div className={classes.container} justify={"center"}>
             <Leap
-              //photos={this.state.photos}
-              photos={this.state.refs}
+              photos={this.state.photoRefs}
               handleHover={this.handleHover}
-              handleClick={this.handleClick}
-              amiclicked={this.state.amiclicked}              
+              handleClick={this.handleClick}           
               handleSwipe={this.handleSwipe}
               handleSwipeUp={this.handleSwipeUp}
               handleRotate={this.handleRotate}
