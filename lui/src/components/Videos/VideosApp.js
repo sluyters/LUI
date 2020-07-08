@@ -341,7 +341,7 @@ class VideosApp extends Component {
       var videoId = videos[videoIndex-1].id;
       if (Math.abs(translation[0]) > threshold || Math.abs(translation[1]) > threshold) {
         if (Math.abs(translation[0]) > Math.abs(translation[1])) {
-          var seconds = this.state.target_dict[videoId].getCurrentTime() + Math.round(translation[0]);
+          var seconds = this.state.target_dict[videoId].getCurrentTime() - Math.round(translation[0]);
           console.log("HANDLE FAST-FORWARD", videoId, seconds)
           this.state.target_dict[videoId].seekTo(seconds, true);  
         } else {
@@ -350,9 +350,6 @@ class VideosApp extends Component {
           this.state.target_dict[videoId].setVolume(volume);          
         }
       }
-      var volume = Math.round(this.state.target_dict[videoId].getVolume() + translation[1]);
-      console.log("HANDLE KNOB", videoId, volume)
-      this.state.target_dict[videoId].setVolume(volume);
     }
 
     // adjust volume
