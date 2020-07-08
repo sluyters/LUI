@@ -81,20 +81,25 @@ class Leap extends React.Component {
             }
         }.bind(this));
         this.gestureHandler.onFrame(function (frame) {
-            var { clicked, hovered } = this.state;
-            this.traceFingers(frame.fingers);
             if (frame.fingers.length != 0) {
-                if (clicked == -1) {
-                    hovered = this.checkHover();
-                    this.setState({ hovered });
-                    this.props.handleHover(hovered);
-                }
+                this.setState({ hand: true });
+            } else {
+                this.setState({ hand: false });
             }
+            this.traceFingers(frame.fingers);
         }.bind(this));
 
         this.timer = setInterval(() => {
             if (this.state.pause > 0) {
                 this.setState({ pause: this.state.pause - 1 });
+            }
+            if (this.state.hand) {
+                var { clicked, hovered } = this.state;
+                if (clicked == -1 && !this.state.amiclicked) {
+                    hovered = this.checkHover();
+                    this.setState({ hovered });
+                    this.props.handleHover(hovered);
+                }
             }
         }, 100);
     }

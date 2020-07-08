@@ -336,9 +336,21 @@ class VideosApp extends Component {
     }
 
     handleIndex = (video, translation) => {
+      const threshold = 0.5;
       var videoIndex = parseInt(video.slice(5));
       var videoId = videos[videoIndex-1].id;
-      var volume = Math.round(this.state.target_dict[videoId].getVolume() + translation);
+      if (Math.abs(translation[0]) > threshold || Math.abs(translation[1]) > threshold) {
+        if (Math.abs(translation[0]) > Math.abs(translation[1])) {
+          var seconds = this.state.target_dict[videoId].getCurrentTime() + Math.round(translation[0]);
+          console.log("HANDLE FAST-FORWARD", videoId, seconds)
+          this.state.target_dict[videoId].seekTo(seconds, true);  
+        } else {
+          var volume = Math.round(this.state.target_dict[videoId].getVolume() + translation[1]);
+          console.log("HANDLE VOLUME", videoId, volume)
+          this.state.target_dict[videoId].setVolume(volume);          
+        }
+      }
+      var volume = Math.round(this.state.target_dict[videoId].getVolume() + translation[1]);
       console.log("HANDLE KNOB", videoId, volume)
       this.state.target_dict[videoId].setVolume(volume);
     }

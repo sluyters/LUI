@@ -110,7 +110,6 @@ class Leap extends React.Component {
             }
             if (this.state.hand) {
                 var { clicked, hovered } = this.state;
-                // CONTINUOUS GESTURES
                 if (clicked == -1 && !this.state.amiclicked) {
                     hovered = this.checkHover();
                     this.setState({ hovered });
