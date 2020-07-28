@@ -254,11 +254,6 @@ class Leap extends React.Component {
         return (-1);
     }
 
-    timer() {
-        // setState method is used to update the state
-        this.setState({ currentCount: this.state.currentCount - 1 });
-    }
-
     render() {
         //console.log(this.state.amiclicked);
 

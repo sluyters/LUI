@@ -89,17 +89,7 @@ class PDFs extends Component {
 
     constructor(props) {
         super(props);
-
-        // this.state = {isClicked: false};
-    
-        // this.handleClick = this.handleClick.bind(this);
     }
-
-    // handleClick() {
-    //     this.setState({
-    //       isClicked: true
-    //     });
-    //   }
 
     render() {
         const { classes, hovered, clicked } = this.props;
@@ -117,7 +107,6 @@ class PDFs extends Component {
                     style={{
                         width: image.width,
                     }}
-                    //component={this.props.link}
                     onClick  = {this.props.onclick}
                 >
                     <span
@@ -149,10 +138,4 @@ PDFs.propTypes = {
     clicked: PropTypes.bool,
 };
 
-// PDFs.defaultProps = {
-//     hovered: false,
-//     clicked: false
-// };
-
 export default withStyles(styles)(PDFs);
-

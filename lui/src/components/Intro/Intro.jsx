@@ -91,8 +91,6 @@ class Intro extends Component {
 
     this.state = {
       exit: false,
-      // frame: {},
-      // hand: "",
     };
   }
 
@@ -110,38 +108,8 @@ class Intro extends Component {
             currentRef.update({"update":false});
         }
       }
-      
     });
   }
-  //   // console.log("Intro leap is mounted")
-  //   this.leap = LeapMotion.loop((frame) => {
-
-  //     this.setState({
-  //       frame,
-  //       hand: frame.hands.length > 0 ? frame.hands[0] : ""
-  //     });
-
-  //     this.traceFingers(frame);
-  //   });
-
-  //   this.timer = setInterval(() => {
-  //     // check for unlocking motion
-  //     if (this.state.hand) {
-  //       console.log("here", this.state.hand.palmVelocity[1] > 300);
-
-  //       if (this.state.hand.palmVelocity[1] > 300) {
-  //         console.log("Unlock Intro");
-  //         this.props.handleUnlock();
-  //       }
-  //     }
-  //   }, 10);
-  // }
-
-  // componentWillUnmount() {
-  //   console.log("Intro leap is unmounted")
-  //   clearInterval(this.timer);
-  //   this.leap.disconnect();
-  // }
 
   handleClick = () => {
     console.log("clicked")
@@ -163,13 +131,11 @@ class Intro extends Component {
 
   render() {
     const { classes } = this.props;
-
     // Handling redirecting to home screen:
     if (this.state.exit) {
       console.log("EXITING")
       return <Redirect to={{ pathname: "/Home", state: {page: "home"} }} />
     }
-
     if (this.props.page == "intro") {
       return (
         <Wrapper isMounted={this.props.isMounted} page={this.props.page}>
