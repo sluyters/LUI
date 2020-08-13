@@ -3,10 +3,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
 import Home from '@material-ui/icons/Home';
-import GestureHandler from '../../gesture-interface/app-interface'; // Added
+import GestureHandler from '../../gesture-interface/app-interface';
 
 const fingers = ["#9bcfedBB", "#B2EBF2CC", "#80DEEABB", "#4DD0E1BB", "#26C6DABB"];
-const left_fingers = ["#d39bed", "#e1b1f1", "#ca80ea", "#b74ce1", "#a425da"];
 const paused_fingers = ["#9bed9b", "#b1f0b1", "#80ea80", "#4ce14c", "#25da25"];
 
 const styles = {
@@ -48,13 +47,6 @@ class Leap extends React.Component {
             console.log(gesture);
             this.setState({ pause: 4 });
         }.bind(this));
-        // gestureHandler.onGesture("rhand_open", function () {
-        //     this.props.handleZoom("in");
-        // }.bind(this));
-
-        // gestureHandler.onGesture("rhand_close", function () {
-        //     this.props.handleZoom("out");
-        // }.bind(this));
 
         gestureHandler.onGesture("rhand_lswipe", function () {
             this.props.handleSwipe("left");
@@ -234,7 +226,6 @@ class Leap extends React.Component {
         }
     }
 
-
     checkHover() { //returns which pdf is hovered
         const pdfs = this.props.pdfs;
         const { x, y } = this.state.indexFinger;
@@ -251,15 +242,11 @@ class Leap extends React.Component {
     }
 
     render() {
-        //console.log(this.state.amiclicked);
-
         const { classes } = this.props;
-
         return (
             <canvas className={classes.canvas} ref="canvas"></canvas>
         )
     }
-
 }
 
 
