@@ -298,19 +298,6 @@ class PDFsApp extends Component {
     this.setState(prevState => ({ rotation: (prevState.rotation + 180 * handRotation / 3.14) }))
   }
 
-  // handleRotate = (dir) => {
-  //   let { rotation } = this.state;
-  //   if (dir === "clockwise") {
-  //     this.setState({
-  //       rotation: rotation + 90
-  //     })
-  //   } else {
-  //     this.setState({
-  //       rotation: rotation - 90
-  //     })
-  //   }
-  // }
-
   handlePinch = (pinch) => {
     let { clicked, zoom } = this.state;
     if (clicked != -1) {
