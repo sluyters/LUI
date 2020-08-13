@@ -294,18 +294,22 @@ class PDFsApp extends Component {
     })
   }
 
-  handleRotate = (dir) => {
-    let { rotation } = this.state;
-    if (dir === "clockwise") {
-      this.setState({
-        rotation: rotation + 90
-      })
-    } else {
-      this.setState({
-        rotation: rotation - 90
-      })
-    }
+  handleRotate = (handRotation) => {
+    this.setState(prevState => ({ rotation: (prevState.rotation + 180 * handRotation / 3.14) }))
   }
+
+  // handleRotate = (dir) => {
+  //   let { rotation } = this.state;
+  //   if (dir === "clockwise") {
+  //     this.setState({
+  //       rotation: rotation + 90
+  //     })
+  //   } else {
+  //     this.setState({
+  //       rotation: rotation - 90
+  //     })
+  //   }
+  // }
 
   handlePinch = (pinch) => {
     let { clicked, zoom } = this.state;
@@ -398,6 +402,7 @@ class PDFsApp extends Component {
   renderFullScreen(index) { //renders the full screen gallery view for the pdfs
     const { classes } = this.props;
     const { rotation, zoom, currentPage, numPages } = this.state;
+    let pdfRotation = Math.round(rotation / 90) * 90;
     return (<div>
       {/* PDF */}
         <div className={classes.pdf} justify={"center"}>
@@ -405,7 +410,7 @@ class PDFsApp extends Component {
               file={pdfs[index]}
               onLoadSuccess={this.onDocumentLoadSuccess}
               onLoadError={console.error}
-              rotate={rotation}
+              rotate={pdfRotation}
             >
               <Page pageNumber={currentPage} scale={zoom} className={classes.pdfpage} />
             </Document>

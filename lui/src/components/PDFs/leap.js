@@ -67,6 +67,7 @@ class Leap extends React.Component {
         gestureHandler.onGesture("rhand_uswipe", function () {
             let clicked = this.state.clicked;
             if (clicked != -1) {
+                gestureHandler.removePoseHandler("grab");
                 gestureHandler.removePoseHandler("pinch");
                 clicked = -1;
                 this.setState({ clicked });
@@ -78,6 +79,9 @@ class Leap extends React.Component {
         gestureHandler.onGesture("rindex_airtap", function () {
             var hovered = this.state.hovered;
             if (hovered != -1) {
+                gestureHandler.onPose("grab", function (data) {
+                    this.props.handleRotate(data.rotation);
+                }.bind(this));
                 gestureHandler.onPose("pinch", function (data) {
                     this.props.handlePinch(data.pinch);
                 }.bind(this));
@@ -85,14 +89,6 @@ class Leap extends React.Component {
                 this.props.handleClick(clicked);
                 this.setState({ clicked: clicked, hovered: -1});
             }
-        }.bind(this));
-
-        gestureHandler.onGesture("rhand_crotate", function () {
-            this.props.handleRotate("clockwise");
-        }.bind(this));
-
-        gestureHandler.onGesture("rhand_acrotate", function () {
-            this.props.handleRotate("anti-clockwise");
         }.bind(this));
 
         gestureHandler.onFrame(function (frame) {
