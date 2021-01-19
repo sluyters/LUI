@@ -2,8 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
-//import LeapMotion from 'leapjs';
-import GestureHandler from '../../gesture-interface/app-interface' // Added
+import GestureHandler from 'quantumleapjs';
 
 const fingers = ["#9bcfed", "#B2EBF2", "#80DEEA", "#4DD0E1", "#26C6DA"];
 const paused_fingers = ["#9bed9b", "#b1f0b1", "#80ea80", "#4ce14c", "#25da25"];
@@ -29,73 +28,85 @@ class Leap extends React.Component {
             zoomed: "",
             pause: 4,
         }
+        this.gestureHandler = new GestureHandler();
     }
 
     componentDidMount() {
-        let gestureHandler = new GestureHandler();
-        this.gestureHandler = gestureHandler;
-        gestureHandler.onEachGesture(function (gesture) {
-            console.log(gesture);
-            this.setState({ pause: 4 });
-        }.bind(this));
-        gestureHandler.onGesture("rhand_lswipe", function () {
-            this.props.handleSwipe("left");
-            let zoomed = this.state.zoomed;
-            if (zoomed) {
-                const index = parseInt(zoomed.slice(5));
-                const newIndex = Math.min(this.props.videos.length, index + 1)
-                zoomed = "video" + String(newIndex);
-                console.log("SWIPE LEFT (leap) " + zoomed)
-                this.setState({ zoomed });
+        this.gestureHandler.registerGestures('dynamic', ['rhand_lswipe', 'rhand_rswipe', 'rhand_uswipe', 'rindex_airtap']);
+        this.gestureHandler.addEventListener('gesture', (event) => {
+            let gesture = event.gesture;
+            if (gesture.type === 'dynamic') {
+                console.log(gesture.name);
+                this.setState({ pause: 4 });
             }
-        }.bind(this));
-        gestureHandler.onGesture("rhand_rswipe", function () {
-            this.props.handleSwipe("right");
-            let zoomed = this.state.zoomed;
-            if (zoomed) {
-                const index = parseInt(zoomed.slice(5));
-                const newIndex = Math.max(1, index - 1)
-                zoomed = "video" + String(newIndex);
-                console.log("SWIPE RIGHT (leap) " + zoomed)
-                this.setState({ zoomed });
-            }
-        }.bind(this));
-        gestureHandler.onGesture("rhand_uswipe", function () {
-            let zoomed = this.state.zoomed;
-            if (zoomed) {
-                zoomed = "";
-                gestureHandler.removePoseHandler("point-index");
-                this.setState({ zoomed });
-            }
-            this.props.handleSwipeUp();
-        }.bind(this));
-        gestureHandler.onGesture("rindex_airtap", function () {
-            var { zoomed, hovered } = this.state;
-            if (hovered && !zoomed) { // zoom in
-                zoomed = hovered;
-                this.props.handleZoom(zoomed);
-                this.setState({ zoomed, hovered: "" });
-                // Add gesture handler for volume
-                gestureHandler.onPose("point-index", function (data) {
+            switch (gesture.name) {
+                case 'rhand_lswipe': {
+                    this.props.handleSwipe("left");
                     let zoomed = this.state.zoomed;
                     if (zoomed) {
-                        this.props.handleIndex(zoomed, data.translation);
+                        const index = parseInt(zoomed.slice(5));
+                        const newIndex = Math.min(this.props.videos.length, index + 1)
+                        zoomed = "video" + String(newIndex);
+                        console.log("SWIPE LEFT (leap) " + zoomed)
+                        this.setState({ zoomed });
                     }
-                }.bind(this));
-            } else if (zoomed) {  // play video
-                console.log("PLAY (leap) " + zoomed)
-                this.props.handleClick(zoomed);
+                    break;
+                }
+                case 'rhand_rswipe': {
+                    this.props.handleSwipe("right");
+                    let zoomed = this.state.zoomed;
+                    if (zoomed) {
+                        const index = parseInt(zoomed.slice(5));
+                        const newIndex = Math.max(1, index - 1)
+                        zoomed = "video" + String(newIndex);
+                        console.log("SWIPE RIGHT (leap) " + zoomed)
+                        this.setState({ zoomed });
+                    }
+                    break;
+                }
+                case 'rhand_uswipe': {
+                    let zoomed = this.state.zoomed;
+                    if (zoomed) {
+                        zoomed = "";
+                        this.gestureHandler.unregisterGestures('static', 'point-index');
+                        this.setState({ zoomed });
+                    }
+                    this.props.handleSwipeUp();
+                    break;
+                }
+                case 'rindex_airtap': {
+                    let { zoomed, hovered } = this.state;
+                    if (hovered && !zoomed) { // zoom in
+                        zoomed = hovered;
+                        this.props.handleZoom(zoomed);
+                        this.setState({ zoomed, hovered: "" });
+                        this.gestureHandler.registerGestures('static', 'point-index');
+                    } else if (zoomed) {  // play video
+                        console.log("PLAY (leap) " + zoomed)
+                        this.props.handleClick(zoomed);
+                    }
+                    break;
+                }
+                case 'point-index': {
+                    let zoomed = this.state.zoomed;
+                    if (zoomed) {
+                        this.props.handleIndex(zoomed, gesture.data.translation);
+                    }
+                    break;
+                }
+                default:
+                    console.log(`No action associated to '${gesture.name}' gesture.`)
             }
-        }.bind(this));
-        this.gestureHandler.onFrame(function (frame) {
-            if (frame.fingers.length != 0) {
+        });
+        this.gestureHandler.addEventListener('frame', (event) => {
+            if (event.frame.fingers.length != 0) {
                 this.setState({ hand: true });
             } else {
                 this.setState({ hand: false });
             }
-            this.traceFingers(frame.fingers);
-        }.bind(this));
-
+            this.traceFingers(event.frame.fingers);
+        });
+        this.gestureHandler.connect();
         this.timer = setInterval(() => {
             if (this.state.pause > 0) {
                 this.setState({ pause: this.state.pause - 1 });
@@ -113,6 +124,7 @@ class Leap extends React.Component {
 
     componentWillUnmount() {
         clearInterval(this.timer);
+        this.gestureHandler.removeEventListeners();
         this.gestureHandler.disconnect();
     }
 

@@ -17,7 +17,7 @@ import Leap from './leap.js';
 import Model from './components/Model';
 import { I } from 'glamorous';
 //add firebase
-import * as firebase from "firebase/app";
+import firebase from 'firebase/app'
 import "firebase/database";
 
 // const zoomIn = css.keyframes({

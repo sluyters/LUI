@@ -19,7 +19,7 @@ import { css } from 'glamor';
 import { Transition } from 'react-transition-group';
 import Carousel from 'react-responsive-carousel';
 //firebase
-import * as firebase from "firebase/app";
+import firebase from 'firebase/app'
 import "firebase/database";
 
 const zoomIn = css.keyframes({
@@ -303,21 +303,26 @@ class PhotosApp extends Component {
   }
 
   handleRotate = (handRotation) => {
-    this.setState(prevState => ({ rotation: (prevState.rotation + 180 * handRotation / 3.14) }))
+    this.setState(prevState => { 
+      return { rotation: (prevState.rotation + 180 * handRotation / 3.14) }
+    });
   }
 
   handlePinch = (pinch, handTranslation) => {
-    let { clicked, zoom, translation } = this.state;
-    if (clicked != -1) {
-      zoom *= ((pinch - 1) * 1.2) + 1;
-      if (zoom < 0.4) {
-        zoom = 0.4;
-      } else if (zoom > 4) {
-        zoom = 4;
-      }
-      translation.x += handTranslation[0] * 5;
-      translation.y += handTranslation[1] * -5;
-      this.setState({ zoom, translation })
+    if (this.state.clicked != -1) {
+      this.setState(prevState => { 
+        let zoom = prevState.zoom * (((pinch - 1) * 1.2) + 1);
+        if (zoom < 0.4) {
+          zoom = 0.4;
+        } else if (zoom > 4) {
+          zoom = 4;
+        }
+        let translation = {
+          x: prevState.translation.x + handTranslation[0] * 5,
+          y: prevState.translation.y + handTranslation[1] * -5,
+        }
+        return { zoom, translation };
+      });
     }
   }
 
@@ -403,9 +408,9 @@ class PhotosApp extends Component {
     return (<div className={classes.carousel} justify={"center"}>
       <Grid container spacing={0} justify={"center"} >
         <Grid item className={classes.cell} xs={12} sm={12}>
-          <div style={{transform: `translate(${translation.x}px,${translation.y}px)`}} > 
+          <div style={{transform: `translate(${translation.x}px,${translation.y}px)`, willChange: 'transform, box-shadow, z-index'}} > 
             <img
-              style={{transform: `rotate(${rotation}deg) scale(${zoom})`}} 
+              style={{transform: `rotate(${rotation}deg) scale3d(${zoom}, ${zoom}, 1)`, willChange: 'transform, box-shadow, z-index'}} 
               onClick={() => { this.rotate() }}
               className={classNames(classes.image, classes.zoomed)}
               src={photos[index]} />

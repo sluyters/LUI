@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Leap from './leap'
-import * as firebase from "firebase/app";
+import firebase from 'firebase/app'
 import "firebase/database";
 
 import { withStyles } from '@material-ui/core/styles';

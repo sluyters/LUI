@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
 import Home from '@material-ui/icons/Home';
-import GestureHandler from '../../gesture-interface/app-interface';
+import GestureHandler from 'quantumleapjs';
 
 const fingers = ["#9bcfedBB", "#B2EBF2CC", "#80DEEABB", "#4DD0E1BB", "#26C6DABB"];
 const paused_fingers = ["#9bed9b", "#b1f0b1", "#80ea80", "#4ce14c", "#25da25"];
@@ -35,63 +34,66 @@ class Leap extends React.Component {
             intervalId3: 0,
             intervalId4: 0,
         }
+        this.gestureHandler = new GestureHandler();
     }
     componentWillReceiveProps(nextProps) {
         this.setState({ amiclicked: nextProps.amiclicked });
     }
 
     componentDidMount() {
-        let gestureHandler = new GestureHandler();
-        this.gestureHandler = gestureHandler;
-        gestureHandler.onEachGesture(function (gesture) {
-            console.log(gesture);
-            this.setState({ pause: 4 });
-        }.bind(this));
-
-        gestureHandler.onGesture("rhand_lswipe", function () {
-            this.props.handleSwipe("left");
-        }.bind(this));
-
-        gestureHandler.onGesture("rhand_rswipe", function () {
-            this.props.handleSwipe("right");
-        }.bind(this));
-
-        gestureHandler.onGesture("rhand_uswipe", function () {
-            let clicked = this.state.clicked;
-            if (clicked != -1) {
-                gestureHandler.removePoseHandler("grab");
-                gestureHandler.removePoseHandler("pinch");
-                clicked = -1;
-                this.setState({ clicked });
-
+        this.gestureHandler.registerGestures('dynamic', ['rhand_lswipe', 'rhand_rswipe', 'rhand_uswipe', 'rindex_airtap']);
+        this.gestureHandler.addEventListener('gesture', (event) => {
+            let gesture = event.gesture;
+            if (gesture.type === 'dynamic') {
+                console.log(gesture.name);
+                this.setState({ pause: 4 });
             }
-            this.props.handleSwipeUp();
-        }.bind(this));
-
-        gestureHandler.onGesture("rindex_airtap", function () {
-            var hovered = this.state.hovered;
-            if (hovered != -1) {
-                gestureHandler.onPose("grab", function (data) {
-                    this.props.handleRotate(data.rotation);
-                }.bind(this));
-                gestureHandler.onPose("pinch", function (data) {
-                    this.props.handlePinch(data.pinch);
-                }.bind(this));
-                const clicked = hovered;
-                this.props.handleClick(clicked);
-                this.setState({ clicked: clicked, hovered: -1});
+            switch (gesture.name) {
+                case 'rhand_lswipe':
+                    this.props.handleSwipe('left');
+                    break;
+                case 'rhand_rswipe':
+                    this.props.handleSwipe('right');
+                    break;
+                case 'rhand_uswipe': {
+                    let clicked = this.state.clicked;
+                    if (clicked != -1) {
+                        this.gestureHandler.unregisterGestures('static', ['grab', 'pinch']);
+                        clicked = -1;
+                        this.setState({ clicked });
+                    }
+                    this.props.handleSwipeUp();
+                    break;
+                }
+                case 'rindex_airtap': {
+                    var hovered = this.state.hovered;
+                    if (hovered != -1) {
+                        this.gestureHandler.registerGestures('static', ['grab', 'pinch']);
+                        const clicked = hovered;
+                        this.props.handleClick(clicked);
+                        this.setState({ clicked: clicked, hovered: -1});
+                    }
+                    break;
+                }
+                case 'grab':
+                    this.props.handleRotate(gesture.data.rotation);
+                    break;
+                case 'pinch':
+                    this.props.handlePinch(gesture.data.pinch);
+                    break;
+                default:
+                    console.log(`No action associated to '${gesture.name}' gesture.`)
             }
-        }.bind(this));
-
-        gestureHandler.onFrame(function (frame) {
-            if (frame.fingers.length != 0) {
+        });
+        this.gestureHandler.addEventListener('frame', (event) => {
+            if (event.frame.fingers.length != 0) {
                 this.setState({ hand: true });
             } else {
                 this.setState({ hand: false });
             }
-            this.traceFingers(frame.fingers);
-        }.bind(this));
-
+            this.traceFingers(event.frame.fingers);
+        });
+        this.gestureHandler.connect();
         this.timer = setInterval(() => {
             if (this.state.pause > 0) {
                 this.setState({ pause: this.state.pause - 1 });
@@ -110,8 +112,8 @@ class Leap extends React.Component {
 
     componentWillUnmount() {
         clearInterval(this.timer);
+        this.gestureHandler.removeEventListeners();
         this.gestureHandler.disconnect();
-        //this.leap.disconnect();
     }
 
     traceFingers(pointables) {

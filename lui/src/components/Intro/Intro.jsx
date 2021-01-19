@@ -9,10 +9,8 @@ import { Redirect } from 'react-router';
 import Button from '@material-ui/core/Button';
 import Home from '@material-ui/icons/Home';
 import Leap from './leap.js';
-import LeapMotion from 'leapjs';
-// import Leap from './leap.js';
 //firebase
-import * as firebase from "firebase/app";
+import firebase from 'firebase/app'
 import "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyDjM37_DSv2RvPQzl5YiVzmgRHfpd4rJFU",

@@ -1,12 +1,12 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
-import GestureHandler from '../../gesture-interface/app-interface' // Added
+import GestureHandler from 'quantumleapjs';
 
 const fingers = ["#9bcfedBB", "#B2EBF2CC", "#80DEEABB", "#4DD0E1BB", "#26C6DABB"];
 const left_fingers = ["#d39bed", "#e1b1f1", "#ca80ea", "#b74ce1", "#a425da"];
 const paused_fingers = ["#9bed9b", "#b1f0b1", "#80ea80", "#4ce14c", "#25da25"];
+const pausedStatic_fingers = ["#ee0231", "#e50b36", "#dc143c", "#d31d42", "#ca2647"];
 
 const styles = {
     canvas: {
@@ -27,45 +27,57 @@ class Leap extends React.Component {
             hovered: -1,
             clicked: -1,
             pause: 4,
+            pauseStatic: 4,
         }
+        this.gestureHandler = new GestureHandler();
     }
 
     componentDidMount() {
-        let gestureHandler = new GestureHandler();
-        this.gestureHandler = gestureHandler;
-        gestureHandler.onEachGesture(function (gesture) {
-            console.log(gesture);
-            this.setState({ pause: 4 });
-        }.bind(this));
-        gestureHandler.onGesture("rhand_lswipe", function () {
-            this.props.handleSwipe("left");
-        }.bind(this));
-        gestureHandler.onGesture("rhand_rswipe", function () {
-            this.props.handleSwipe("right");
-        }.bind(this));
-        gestureHandler.onGesture("rhand_uswipe", function () {
-            let clicked = this.state.clicked;
-            if (clicked != -1) {
-                gestureHandler.removePoseHandler("grab");
-                gestureHandler.removePoseHandler("pinch");
-                gestureHandler.removePoseHandler("thumb");
-                clicked = -1;
-                this.setState({ clicked });
+        this.gestureHandler.registerGestures('dynamic', ['rhand_lswipe', 'rhand_rswipe', 'rhand_uswipe', 'rindex_airtap']);
+        this.gestureHandler.addEventListener('gesture', (event) => {
+            let gesture = event.gesture;
+            if (gesture.type === 'static') {
+                this.setState({ pauseStatic: 4 });
+            } else if (gesture.type === 'dynamic') {
+                console.log(gesture.name);
+                this.setState({ pause: 4 });
             }
-            this.props.handleSwipeUp();
-        }.bind(this));
-        gestureHandler.onGesture("rindex_airtap", function () {
-            var { clicked, hovered } = this.state;
-            if (clicked == -1 && hovered != -1) {
-                gestureHandler.onPose("grab", function (data) {
-                    this.props.handleRotate(data.rotation);
-                }.bind(this));
-                gestureHandler.onPose("pinch", function (data) {
-                    this.props.handlePinch(data.pinch, data.translation);
-                }.bind(this));
-                gestureHandler.onPose("thumb", function (data) {
-                    let thumbUp = data.thumbVector[1] > 40;
-                    let thumbDown = data.thumbVector[1] < -40;
+            switch (gesture.name) {
+                case 'rhand_lswipe':
+                    this.props.handleSwipe('left');
+                    break;
+                case 'rhand_rswipe':
+                    this.props.handleSwipe('right');
+                    break;
+                case 'rhand_uswipe': {
+                    let clicked = this.state.clicked;
+                    if (clicked != -1) {
+                        this.gestureHandler.unregisterGestures('static', ['grab', 'pinch', 'thumb']);
+                        clicked = -1;
+                        this.setState({ clicked });
+                    }
+                    this.props.handleSwipeUp();
+                    break;
+                }
+                case 'rindex_airtap': {
+                    let { clicked, hovered } = this.state;
+                    if (clicked == -1 && hovered != -1) {
+                        this.gestureHandler.registerGestures('static', ['grab', 'pinch', 'thumb']);
+                        clicked = hovered;
+                        this.props.handleClick(clicked);
+                        this.setState({ clicked: clicked, hovered: -1});
+                    }
+                    break;
+                }
+                case 'grab':
+                    this.props.handleRotate(gesture.data.rotation);
+                    break;
+                case 'pinch':
+                    this.props.handlePinch(gesture.data.pinch, gesture.data.translation);
+                    break;
+                case 'thumb': {
+                    let thumbUp = gesture.data.thumbVector[1] > 40;
+                    let thumbDown = gesture.data.thumbVector[1] < -40;
                     if (thumbUp) {
                         console.log("THUMB UP");
                         this.props.handleThumb(true);
@@ -74,24 +86,27 @@ class Leap extends React.Component {
                         console.log("THUMB DOWN");
                         this.props.handleThumb(false);
                     }
-                }.bind(this));
-                clicked = hovered;
-                this.props.handleClick(clicked);
-                this.setState({ clicked: clicked, hovered: -1});
+                    break;
+                }
+                default:
+                    console.log(`No action associated to '${gesture.name}' gesture.`)
             }
-        }.bind(this));
-        this.gestureHandler.onFrame(function (frame) {
-            if (frame.fingers.length != 0) {
+        });
+        this.gestureHandler.addEventListener('frame', (event) => {
+            if (event.frame.fingers.length != 0) {
                 this.setState({ hand: true });
             } else {
                 this.setState({ hand: false });
             }
-            this.traceFingers(frame.fingers);
-        }.bind(this));
-
+            this.traceFingers(event.frame.fingers);
+        });
+        this.gestureHandler.connect();
         this.timer = setInterval(() => {
             if (this.state.pause > 0) {
                 this.setState({ pause: this.state.pause - 1 });
+            }
+            if (this.state.pauseStatic > 0) {
+                this.setState({pauseStatic: this.state.pauseStatic - 1})
             }
             if (this.state.hand) {
                 var { clicked, hovered } = this.state;
@@ -106,6 +121,7 @@ class Leap extends React.Component {
 
     componentWillUnmount() {
         clearInterval(this.timer);
+        this.gestureHandler.removeEventListeners();
         this.gestureHandler.disconnect();
     }
 
@@ -119,9 +135,15 @@ class Leap extends React.Component {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const { pause } = this.state;
-
+            const { pauseStatic } = this.state;
             pointables.forEach((pointable) => {
-                const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
+                let color = fingers[pointable.type];
+                if (pause) {
+                    color = paused_fingers[pointable.type];
+                } else if (pauseStatic) {
+                    color = pausedStatic_fingers[pointable.type];                
+                }
+                //const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
                 const normalized = pointable.normalizedPosition;
                 const x = ctx.canvas.width * normalized[0];
                 const y = ctx.canvas.height * (1 - normalized[1]);

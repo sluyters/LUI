@@ -14,7 +14,7 @@ import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import Home from '@material-ui/icons/Home';
 //add firebase
-import * as firebase from "firebase/app";
+import firebase from 'firebase/app'
 import "firebase/database";
 import Clear from '@material-ui/icons/Clear';
 

@@ -5,7 +5,7 @@ import { Redirect } from 'react-router';
 import $ from 'jquery';
 import { withStyles } from '@material-ui/core/styles';
 //add firebase
-import * as firebase from "firebase/app";
+import firebase from 'firebase/app'
 import "firebase/database";
 
 const styles = {

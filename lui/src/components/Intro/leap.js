@@ -1,9 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { withStyles } from '@material-ui/core/styles';
-// import LeapMotion from 'leapjs';
-import GestureHandler from '../../gesture-interface/app-interface' // Added
+import GestureHandler from 'quantumleapjs';
 import { Fade } from '@material-ui/core';
 
 const fingers = ["#9bcfed", "#B2EBF2", "#80DEEA", "#4DD0E1", "#26C6DA"];
@@ -26,30 +24,31 @@ class Leap extends React.Component {
             frame: {},
             hand: "",
             indexFinger: "",
-
         }
+        this.gestureHandler = new GestureHandler();
     }
 
     componentDidMount() {
-        this.gestureHandler = new GestureHandler();
-
-        this.gestureHandler.onEachGesture(function (gesture) {
-            console.log(gesture);
+        this.gestureHandler.registerGestures('dynamic', ['rhand_uswipe', 'rindex_airtap']);
+        this.gestureHandler.addEventListener('gesture', (event) => {
+            let gesture = event.gesture;
+            console.log(gesture.name);
             this.setState({ pause: 4 });
-        }.bind(this));
-
-        this.gestureHandler.onGesture("rhand_uswipe", function () {
-            this.props.handleExit();
-        }.bind(this));
-
-        this.gestureHandler.onGesture("rindex_airtap", function () {
-            this.props.handleClick();
-        }.bind(this));
-
-        this.gestureHandler.onFrame(function (frame) {
-            this.traceFingers(frame.fingers);
-        }.bind(this));
-
+            switch (gesture.name) {
+                case 'rhand_uswipe':
+                    this.props.handleExit();
+                    break;
+                case 'rindex_airtap':
+                    this.props.handleClick();
+                    break;
+                default:
+                    console.log(`No action associated to '${gesture.name}' gesture.`)
+            }
+        });
+        this.gestureHandler.addEventListener('frame', (event) => {
+            this.traceFingers(event.frame.fingers);
+        });
+        this.gestureHandler.connect();
         this.timer = setInterval(() => {
             if (this.state.pause > 0) {
                 this.setState({ pause: this.state.pause - 1 });
@@ -60,6 +59,7 @@ class Leap extends React.Component {
     componentWillUnmount() {
         console.log("Intro leap is unmounted")
         clearInterval(this.timer);
+        this.gestureHandler.removeEventListeners();
         this.gestureHandler.disconnect();
     }
 

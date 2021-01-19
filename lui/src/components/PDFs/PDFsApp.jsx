@@ -18,7 +18,7 @@ import { css } from 'glamor';
 import { Transition } from 'react-transition-group';
 import Carousel from 'react-responsive-carousel';
 //firebase
-import * as firebase from "firebase/app";
+import firebase from 'firebase/app'
 import "firebase/database";
 
 import { Document, Page, pdfjs } from "react-pdf";
