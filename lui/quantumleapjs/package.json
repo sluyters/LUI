@@ -1,0 +1,23 @@
+{
+  "name": "quantumleapjs",
+  "version": "1.0.0",
+  "description": "An interface to connect to the QuantumLeap framework.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sluyters/quantumleapjs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sluyters/quantumleapjs/issues"
+  },
+  "homepage": "https://github.com/sluyters/quantumleapjs#readme",
+  "dependencies": {
+    "reconnecting-websocket": "^4.4.0",
+    "websocket": "^1.0.33"
+  }
+}
