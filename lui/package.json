@@ -21,6 +21,7 @@
     "react-dom": "^16.8.6",
     "react-particles-js": "^2.4.2",
     "react-pdf": "^4.1.0",
+    "react-player": "^2.9.0",
     "react-render-html": "^0.6.0",
     "react-responsive-carousel": "^3.1.41",
     "react-router-dom": "^4.3.1",

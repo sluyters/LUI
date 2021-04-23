@@ -31,7 +31,9 @@ const zoomIn = css.keyframes({
 const styles = {
 
   gallery: {
-    animation: `${zoomIn} 1s`
+    animation: `${zoomIn} 1s`,
+    width: '100%',
+    height: '100%',
   },
 
   container: {
@@ -51,7 +53,8 @@ const styles = {
 
   carousel: {
     // width: '90%',
-    maxHeight: '95%',
+    width: '100%',
+    height: '100%',
     padding: '0px',
     margin: '0px',
     overflow: 'hidden',
@@ -59,6 +62,21 @@ const styles = {
 
   row: {
     maxHeight: '50vh',
+  },
+
+  fullScreenContainer: { 
+    height: '100%', 
+    width: '100%', 
+    overflow: 'hidden',
+  },
+
+  imageBox: {
+    height: '100%',
+    width: '100%',
+    display: 'flex', 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
 
   cell: {
@@ -74,6 +92,7 @@ const styles = {
 
   image: {
     display: 'block',
+    boxSizing: 'border-box',
     maxWidth: '90%',
     maxHeight: '60%',
     width: 'auto',
@@ -97,7 +116,21 @@ const styles = {
   },
 
   zoomed: {
-    maxHeight: '80vh'
+    display: 'block',
+    boxSizing: 'border-box',
+    width: 'auto',
+    height: 'auto',
+    margin: 'auto',
+    padding: '30px',
+    border: 'none',
+    transform: 'scale(1)',
+    transition: 'all 0.2s',
+    boxShadow: '0px 0px 10px 2px #999',
+    backgroundColor: "#ECEFF1",
+    position: "relative",
+    zIndex: '1',
+    maxHeight: '90%',
+    maxWidth: '90%'
   },
 
   dots: {
@@ -111,6 +144,11 @@ const styles = {
     left: 0,
     right: 0,
     overflow: 'hidden'
+  },
+
+  contentContainer: {
+    width: '100%', 
+    height: '100%',
   },
 
   controlbar: {
@@ -177,26 +215,41 @@ const Wrapper = glamorous.div(props => ({
   height: '100vh',
   zIndex: 5
 }))
-const photos = ['https://images.unsplash.com/photo-1531752074002-abf991376d04?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=d9a0a2b6b4212fc234d319be9c87c615&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531700968341-bd114e5006ec?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=0e3b02f32d781454cb7f97a78657a5b4&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1533247094082-709d7257cb7b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=03d0175eccb69353cf2cc77869902e4f&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1533213603451-060f6ec38bfa?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4d961f9dbe9795f95febb3743a89d14d&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531574595918-cb77c99fe5e2?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=ad5b61555629bdf87c0dd87b4a383ff1&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1533135347859-2d07f6e8199b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=eb46a125e61ce38dc70712cefc7cb147&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1533071581733-1a1600ec8ac6?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a59d7ee412d9efb4818bb4a9ddd55c9&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1533213603451-060f6ec38bfa?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4d961f9dbe9795f95febb3743a89d14d&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531574595918-cb77c99fe5e2?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=ad5b61555629bdf87c0dd87b4a383ff1&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1533135347859-2d07f6e8199b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=eb46a125e61ce38dc70712cefc7cb147&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1533071581733-1a1600ec8ac6?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a59d7ee412d9efb4818bb4a9ddd55c9&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531752074002-abf991376d04?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=d9a0a2b6b4212fc234d319be9c87c615&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531700968341-bd114e5006ec?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=0e3b02f32d781454cb7f97a78657a5b4&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1533247094082-709d7257cb7b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=03d0175eccb69353cf2cc77869902e4f&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
-                'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60']
+// const photos = ['https://images.unsplash.com/photo-1531752074002-abf991376d04?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=d9a0a2b6b4212fc234d319be9c87c615&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531700968341-bd114e5006ec?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=0e3b02f32d781454cb7f97a78657a5b4&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533247094082-709d7257cb7b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=03d0175eccb69353cf2cc77869902e4f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533213603451-060f6ec38bfa?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4d961f9dbe9795f95febb3743a89d14d&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531574595918-cb77c99fe5e2?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=ad5b61555629bdf87c0dd87b4a383ff1&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533135347859-2d07f6e8199b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=eb46a125e61ce38dc70712cefc7cb147&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533071581733-1a1600ec8ac6?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a59d7ee412d9efb4818bb4a9ddd55c9&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533213603451-060f6ec38bfa?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4d961f9dbe9795f95febb3743a89d14d&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531574595918-cb77c99fe5e2?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=ad5b61555629bdf87c0dd87b4a383ff1&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533135347859-2d07f6e8199b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=eb46a125e61ce38dc70712cefc7cb147&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533071581733-1a1600ec8ac6?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a59d7ee412d9efb4818bb4a9ddd55c9&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531752074002-abf991376d04?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=d9a0a2b6b4212fc234d319be9c87c615&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531700968341-bd114e5006ec?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=0e3b02f32d781454cb7f97a78657a5b4&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533247094082-709d7257cb7b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=03d0175eccb69353cf2cc77869902e4f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60']
+
+const photos = [
+  'photo (1).jpg',
+  'photo (2).jpg',
+  'photo (3).jpg',
+  'photo (4).jpg',
+  'photo (5).jpg',
+  'photo (6).jpg',
+  'photo (7).jpg',
+  'photo (8).jpg',
+  'photo (9).jpg',
+  'photo (10).jpg',
+  'photo (11-2).jpg',
+  'photo (12).jpg',
+]
 
 //firebase
 const firebaseConfig = {
@@ -210,7 +263,7 @@ const firebaseConfig = {
 };
 
 if (!firebase.apps.length) {
-firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp(firebaseConfig);
 }
 var database = firebase.database();
 var currentRef = database.ref('voice');
@@ -238,6 +291,8 @@ class PhotosApp extends Component {
       zoom: 1.0,
       translation: { x: 0.0, y: 0.0 }
     };
+
+    this.rotateTimeout = undefined;
 
     this.handleClick = this.handleClick.bind(this);
   }
@@ -278,7 +333,8 @@ class PhotosApp extends Component {
 
 
   rotate(){
-    let newRotation = this.state.rotation + 45;
+    clearTimeout(this.rotateTimeout);
+    let newRotation = this.state.rotation + 90;
     if(newRotation >= 360){
       newRotation =- 360;
     }
@@ -303,15 +359,25 @@ class PhotosApp extends Component {
   }
 
   handleRotate = (handRotation) => {
-    this.setState(prevState => { 
-      return { rotation: (prevState.rotation + 180 * handRotation / 3.14) }
-    });
+    const { rotation } = this.state;
+    clearTimeout(this.rotateTimeout);
+    let newRotation = Math.round((rotation + 180 * handRotation / 3.14) * 10) / 10;
+    if (newRotation !== rotation) {
+      this.setState({ 
+        rotation: newRotation,
+      });
+    }
+    this.rotateTimeout = setTimeout(() => {
+      this.setState({
+        rotation: Math.round(rotation / 90) * 90,
+      });
+    }, 200);
   }
 
   handlePinch = (pinch, handTranslation) => {
     if (this.state.clicked != -1) {
       this.setState(prevState => { 
-        let zoom = prevState.zoom * (((pinch - 1) * 1.2) + 1);
+        let zoom = Math.round((prevState.zoom * (((pinch - 1) * 1.2) + 1)) * 50) / 50;
         if (zoom < 0.4) {
           zoom = 0.4;
         } else if (zoom > 4) {
@@ -348,14 +414,12 @@ class PhotosApp extends Component {
     let { clicked, photoRefs, index, numPreviewPages } = this.state; 
     this.setState({ rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } })    // Added - rotation
     if (dir === "left") {
-      console.log("swipe left");
       if (clicked != -1) {
         this.setState({ clicked: Math.min(photoRefs.length - 1, clicked + 1) })
       } else if (index < numPreviewPages - 1) {
         this.setState({ index: index + 1 })
       }
     } else {
-      console.log("swipe right");
       if (clicked != -1) {
         this.setState({ clicked: Math.max(0, clicked - 1) })
       } else if (index > 0) {
@@ -398,26 +462,24 @@ class PhotosApp extends Component {
         onMouseLeave={() => { this.setState({hovered: -1}) }}
         onClick={() => { this.handleClick(index) }} 
         className={hovered === index ? classNames(classes.image, classes.hovered) : classes.image}
-        src={ photos[index] } />
+        src={ `/photos/${photos[index]}` } />
     </Grid>);
   }
 
   renderFullScreenPhoto(index) { //renders the selected photo in full screen view
     const { classes } = this.props;
     const { rotation, zoom, translation } =  this.state; 
-    return (<div className={classes.carousel} justify={"center"}>
-      <Grid container spacing={0} justify={"center"} >
-        <Grid item className={classes.cell} xs={12} sm={12}>
-          <div style={{transform: `translate(${translation.x}px,${translation.y}px)`, willChange: 'transform, box-shadow, z-index'}} > 
-            <img
-              style={{transform: `rotate(${rotation}deg) scale3d(${zoom}, ${zoom}, 1)`, willChange: 'transform, box-shadow, z-index'}} 
-              onClick={() => { this.rotate() }}
-              className={classNames(classes.image, classes.zoomed)}
-              src={photos[index]} />
-          </div>
-        </Grid>
-      </Grid>
-    </div>);
+    return (
+      <div className={classes.fullScreenContainer}>
+        <div className={classes.imageBox} style={{transform: `translate(${translation.x}px,${translation.y}px)`, willChange: 'transform, box-shadow, z-index'}} > 
+          <img
+            style={{ transform: `rotate(${rotation}deg) scale3d(${zoom}, ${zoom}, 1)`, willChange: 'transform, box-shadow, z-index'}} 
+            onClick={() => { this.rotate() }}
+            className={classes.zoomed}
+            src={`/photos/${photos[index]}`}/>
+        </div>
+      </div>
+    );
   }
 
   renderFullScreen(index) { //renders the full screen gallery view for the photos
@@ -429,15 +491,17 @@ class PhotosApp extends Component {
       fullScreenPhotos.push(this.renderFullScreenPhoto(i));
     }
 
-    return (<div>
-      <SwipeableViews className={classes.gallery} index={index} >
-        {fullScreenPhotos}
-      </SwipeableViews>
-      {/* Exit button: */}
-      <Button onClick={() => this.handleSwipeUp()}  className={classes.xbutton}> 
-        <Clear/>
-      </Button>
-    </div>);
+    return (
+      <div className={classes.contentContainer}>
+        <SwipeableViews className={classes.gallery} containerStyle={{ width: '100%', height: '100%' }} index={index} >
+          {fullScreenPhotos}
+        </SwipeableViews>
+        {/* Exit button: */}
+        <Button onClick={() => this.handleSwipeUp()}  className={classes.xbutton}> 
+          <Clear/>
+        </Button>
+      </div>
+    );
   }
 
   renderPhotos() {
@@ -473,13 +537,15 @@ class PhotosApp extends Component {
       </div>);
     }
 
-    return (<div>
+    return (
       <div>
-        <SwipeableViews className={classes.gallery} index={index}>
-          {pages}
-        </SwipeableViews>
+        <div>
+          <SwipeableViews className={classes.gallery} index={index}>
+            {pages}
+          </SwipeableViews>
+        </div>
       </div>
-    </div>);
+    );
   }
 
   renderStepper() {
@@ -553,7 +619,6 @@ class PhotosApp extends Component {
 
     return (
       <Wrapper isMounted={this.props.isMounted} exit={this.state.exit}>
-        <div>
           <div className={classes.container} justify={"center"}>
             <Leap
               photos={this.state.photoRefs}
@@ -588,7 +653,6 @@ class PhotosApp extends Component {
               </div>
             </div>
           </div>
-        </div>
       </Wrapper>
     );
   }

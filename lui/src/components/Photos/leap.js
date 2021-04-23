@@ -141,7 +141,7 @@ class Leap extends React.Component {
                 if (pause) {
                     color = paused_fingers[pointable.type];
                 } else if (pauseStatic) {
-                    color = pausedStatic_fingers[pointable.type];                
+                    // color = pausedStatic_fingers[pointable.type];                
                 }
                 //const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
                 const normalized = pointable.normalizedPosition;
@@ -150,7 +150,7 @@ class Leap extends React.Component {
                 const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
                 this.drawCircle([x, y], radius, color, pointable.type === 1);
 
-                if (pointable.type == 1) {
+                if (pointable.type === 1 && pointable.hand === 'right') {
                     this.setState({
                         indexFinger: { x, y, vel: pointable.tipVelocity[2] }
                     })

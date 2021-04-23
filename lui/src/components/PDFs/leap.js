@@ -135,7 +135,7 @@ class Leap extends React.Component {
                 const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
                 this.drawCircle([x, y], radius, color, pointable.type === 1);
 
-                if (pointable.type == 1) {
+                if (pointable.type === 1 && pointable.hand === 'right') {
                     this.setState({
                         indexFinger: { x, y, vel: pointable.tipVelocity[2] }
                     })

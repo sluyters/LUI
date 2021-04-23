@@ -238,7 +238,8 @@ class App extends Component {
               onClick={() => { this.setState({ clicked: "card3" }) }}
               onMouseEnter={() => { this.setState({ hovered: "card3" }) }}
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
-              <Prismatic hovered={this.state.hovered === "card3"} clicked={false} />
+              {/* <Prismatic hovered={this.state.hovered === "card3"} clicked={this.state.clicked === "card3"} /> */}
+              <Prismatic hovered={false} clicked={false} />
             </Grid>
           </Grid>
           
@@ -253,19 +254,21 @@ class App extends Component {
               onClick={() => { this.setState({ clicked: "card4" }) }}
               onMouseEnter={() => { this.setState({ hovered: "card4" }) }}
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
-              <PDFs hovered={this.state.hovered === "card4"} clicked={this.state.clicked === "card4"} />
+              {/* <PDFs hovered={this.state.hovered === "card4"} clicked={this.state.clicked === "card4"} /> */}
+              <PDFs hovered={false} clicked={false} />
             </Grid>
             <Grid ref="card5" item xs={4}
               onClick={() => { this.setState({ clicked: "card5" }) }}
               onMouseEnter={() => { this.setState({ hovered: "card5" }) }}
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
-              <GestureKeyboard hovered={this.state.hovered === "card5"} clicked={this.state.clicked === "card5"} />
+              {/* <GestureKeyboard hovered={this.state.hovered === "card5"} clicked={this.state.clicked === "card5"} /> */}
+              <GestureKeyboard hovered={false} clicked={false} />
             </Grid>
             <Grid ref="card6" item xs={4}
               onClick={() => { this.setState({ clicked: "card6" }) }}
               onMouseEnter={() => { this.setState({ hovered: "card6" }) }}
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
-              <Model hovered={this.state.hovered === "card6"} clicked={false} />
+              <Model hovered={false} clicked={false} />
             </Grid>
           </Grid>
         </Grid>

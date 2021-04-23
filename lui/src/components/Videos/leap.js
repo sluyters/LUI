@@ -24,8 +24,8 @@ class Leap extends React.Component {
         super(props)
         this.state = {
             indexFinger: "",
-            hovered: "",
-            zoomed: "",
+            hovered: -1,
+            zoomed: -1,
             pause: 4,
         }
         this.gestureHandler = new GestureHandler();
@@ -34,6 +34,8 @@ class Leap extends React.Component {
     componentDidMount() {
         this.gestureHandler.registerGestures('dynamic', ['rhand_lswipe', 'rhand_rswipe', 'rhand_uswipe', 'rindex_airtap']);
         this.gestureHandler.addEventListener('gesture', (event) => {
+            let { zoomed, hovered } = this.state;
+
             let gesture = event.gesture;
             if (gesture.type === 'dynamic') {
                 console.log(gesture.name);
@@ -42,54 +44,39 @@ class Leap extends React.Component {
             switch (gesture.name) {
                 case 'rhand_lswipe': {
                     this.props.handleSwipe("left");
-                    let zoomed = this.state.zoomed;
-                    if (zoomed) {
-                        const index = parseInt(zoomed.slice(5));
-                        const newIndex = Math.min(this.props.videos.length, index + 1)
-                        zoomed = "video" + String(newIndex);
-                        console.log("SWIPE LEFT (leap) " + zoomed)
-                        this.setState({ zoomed });
+                    if (zoomed !== -1) {
+                        this.setState({ zoomed: Math.min(this.props.videos.length - 1, zoomed + 1) });
                     }
                     break;
                 }
                 case 'rhand_rswipe': {
                     this.props.handleSwipe("right");
-                    let zoomed = this.state.zoomed;
-                    if (zoomed) {
-                        const index = parseInt(zoomed.slice(5));
-                        const newIndex = Math.max(1, index - 1)
-                        zoomed = "video" + String(newIndex);
-                        console.log("SWIPE RIGHT (leap) " + zoomed)
-                        this.setState({ zoomed });
+                    if (zoomed !== -1) {
+                        this.setState({ zoomed: Math.max(0, zoomed - 1) });
                     }
                     break;
                 }
                 case 'rhand_uswipe': {
-                    let zoomed = this.state.zoomed;
-                    if (zoomed) {
-                        zoomed = "";
+                    if (zoomed !== -1) {
                         this.gestureHandler.unregisterGestures('static', 'point-index');
-                        this.setState({ zoomed });
+                        this.setState({ zoomed: -1 });
                     }
                     this.props.handleSwipeUp();
                     break;
                 }
                 case 'rindex_airtap': {
-                    let { zoomed, hovered } = this.state;
-                    if (hovered && !zoomed) { // zoom in
+                    if (hovered !== -1 && zoomed === -1) { // zoom in
                         zoomed = hovered;
                         this.props.handleZoom(zoomed);
-                        this.setState({ zoomed, hovered: "" });
+                        this.setState({ zoomed: zoomed, hovered: -1 });
                         this.gestureHandler.registerGestures('static', 'point-index');
-                    } else if (zoomed) {  // play video
-                        console.log("PLAY (leap) " + zoomed)
+                    } else if (zoomed !== -1) {  // play video
                         this.props.handleClick(zoomed);
                     }
                     break;
                 }
                 case 'point-index': {
-                    let zoomed = this.state.zoomed;
-                    if (zoomed) {
+                    if (zoomed !== -1) {
                         this.props.handleIndex(zoomed, gesture.data.translation);
                     }
                     break;
@@ -113,7 +100,7 @@ class Leap extends React.Component {
             }
             if (this.state.hand) {
                 var { zoomed, hovered } = this.state;
-                if (!zoomed) {
+                if (zoomed === -1) {
                     hovered = this.checkHover();
                     this.setState({ hovered });
                     this.props.handleHover(hovered);
@@ -147,7 +134,7 @@ class Leap extends React.Component {
                 const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
                 this.drawCircle([x, y], radius, color, pointable.type === 1);
 
-                if (pointable.type == 1) {
+                if (pointable.type === 1 && pointable.hand === 'right') {
                     this.setState({
                         indexFinger: { x, y, vel: pointable.tipVelocity[2] }
                     })
@@ -178,22 +165,24 @@ class Leap extends React.Component {
         const videos = this.props.videos;
         const { x, y } = this.state.indexFinger;
         // don't check for hovering while zoomed in
-        if (!this.state.zoomed) {
-          for (let i = 0; i < videos.length; i++) {
-              if (videos[i]){
-                  const videoNode = ReactDOM.findDOMNode(videos[i]);
-                  const dims = videoNode.getBoundingClientRect();
-                  if (x > dims.left && x < dims.right &&
-                      y > dims.top - videoSizeOffset && y < dims.bottom + videoSizeOffset) {
-                      // console.log("HOVER", String(i + 1));
-                      // console.log(videos[i].props);
-                      return ("video" + String(i + 1));
-                  }
-              }
-          }
+        if (this.state.zoomed === -1) {
+            for (let i = 0; i < videos.length; i++) {
+                if (videos[i]) {
+                    const videoNode = ReactDOM.findDOMNode(videos[i].current);
+                    if (videoNode !== null) {
+                        const dims = videoNode.getBoundingClientRect();
+                        if (x > dims.left && x < dims.right &&
+                            y > dims.top - videoSizeOffset && y < dims.bottom + videoSizeOffset) {
+                            // console.log("HOVER", String(i + 1));
+                            // console.log(videos[i].props);
+                            return i;
+                        }
+                    }   
+                }
+            }
         }
         // console.log("HOVER NONE");
-        return ("");
+        return -1;
     }
 
     render() {
@@ -201,7 +190,7 @@ class Leap extends React.Component {
 
         return (
             <canvas className={classes.canvas} ref="canvas"></canvas>
-        )
+        );
     }
 }
 
