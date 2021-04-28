@@ -46,15 +46,12 @@ var database = firebase.database();
 var currentRef = database.ref('voice');
 //end
 
-const styles = {
-
+const styles = (theme) => ({
   gallery: {
     animation: `${zoomIn} 0.5s`,
     height: '95vh',
   },
-
   carousel: {
-    // width: '90%',
     height: '100%',
     width: '100%',
     display: 'flex',
@@ -63,27 +60,14 @@ const styles = {
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0)',
   },
-
   row: {
     height: '30%',
     margin: '2%'
   },
-
-  // cell: {
-  //   display: 'inline-block',
-  //   width: '100%',
-  //   height: '100%',
-  //   verticalAlign: 'middle',
-  //   boxSizing: 'border-box',
-  //   margin: '0px',
-  //   position: 'relative',
-  // },
-
   contentContainer: {
     width: '100%', 
     height: '100%',
   },
-
   container: {
     position: 'absolute',
     top: '0px',
@@ -97,43 +81,28 @@ const styles = {
     backgroundColor: '#ECEFF1',
     overflow: 'hidden',
   },
-
   frameContainer: {
     display: 'block',
     width: '25vw',
     height: '27vh',
     verticalAlign: 'middle',
-    // boxSizing: 'border-box',
     padding: '0px',
-    // margin: '1.5vw',
-    // transform: 'scale(1)',
-    // transition: '200ms',
-    // border: '2px solid #37474F',
     boxShadow: '0px 0px 10px 2px #999',
     overflow: 'hidden',
     position: 'relative',
     zIndex: 5
-    // pointerEvents: 'none'
   },
-
   zoomed: {
     width: '100vw',
     height: '93vh',
-    // top: '0px',
-    // left: '0px',
-    // position: 'fixed',
-    // zIndex: '100',
   },
-
   hovered: {
     transform: 'scale(1.15)',
     transition: '200ms ease-out',
     position: 'relative',
     zIndex: 5,
   },
-
   stepper: {
-    // display: 'auto',
     marginLeft: 'auto',
     marginRight: 'auto',
     width: '8em',
@@ -141,27 +110,21 @@ const styles = {
     position: "absolute",
     bottom: "1px",
   },
-
   dots: {
     margin: 'auto',
   },
-
   button: {
     position: 'fixed',
     bottom: '10px',
     left: '10px',
     color: "rgba(50,50,50,0.8)",
   },
-
   xbutton: {
     position: 'fixed',
     bottom: '10px',
     right: '10px',
     color: "rgba(50,50,50,0.8)",
   },
-
-  
-
   overviewPage: {
     height: '100%',
     width: '100%',
@@ -179,8 +142,6 @@ const styles = {
     justifyContent: 'center',
   },
   videoPreviewContainer: {
-    // transform: 'scale(1)',
-    // transition: '200ms',
     height: '90%',
     width: '90%',
     zIndex: 50,
@@ -213,13 +174,32 @@ const styles = {
     '& > video': {
       display: 'block',
     },
+  },
+  volume: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: '-100px',
+    marginLeft: '-25px',
+    height: '200px',
+    width: '50px',
+    borderRadius: '25px',
+    overflow: 'hidden',
+    zIndex: 55,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    transition: 'opacity 0.2s',
+  },
+  volumeSlider: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+  },
+  hidden: {
+    opacity: 0,
   }
-
-  // row: {
-  //   pointerEvents: "none"
-  // }
-
-};
+});
 
 // const videos = [
 //     { id: 'rnlCGw-0R8g' },
@@ -289,9 +269,11 @@ class VideosApp extends Component {
       index: 0,
       exit: false,
       volume: 1,
+      displayVolume: false,
     };
     this.videosRefs = videos.map(_ => createRef());
     this.fullScreenVideosRefs = videos.map(_ => createRef());
+    this.volumeTimeout = undefined;
   }
 
   componentDidMount() {
@@ -314,6 +296,10 @@ class VideosApp extends Component {
       }
 
     });
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.volumeTimeout);
   }
 
   handleHover = (videoId) => {
@@ -371,16 +357,24 @@ class VideosApp extends Component {
 
   handleIndex = (videoId, translation) => {
     const threshold = 0.5;
-    let videoRef = this.fullScreenVideosRefs[videoId];
     if (Math.abs(translation[0]) > threshold || Math.abs(translation[1]) > threshold) {
       if (Math.abs(translation[0]) > Math.abs(translation[1])) {
+        // Move in the video
+        let videoRef = this.fullScreenVideosRefs[videoId];
         const adjustment = videoRef.current.getDuration() / (3 * 60);
         let seconds = videoRef.current.getCurrentTime() - Math.round(translation[0]) * adjustment;
         videoRef.current.seekTo(seconds, 'seconds');
       } else {
+        // Update volume
         this.setState(prevState => ({
+          displayVolume: true,
           volume: Math.min(Math.max(prevState.volume + translation[1] / 100, 0), 1), 
         }));
+        // Timeout to stop displaying the volume
+        clearTimeout(this.volumeTimeout);
+        this.volumeTimeout = setTimeout(_ => {
+          this.setState({ displayVolume: false });
+        }, 500);
       }
     }
   }
@@ -501,9 +495,13 @@ class VideosApp extends Component {
 
   renderFullScreen(index) {
     const { classes } = this.props;
+    const { volume, displayVolume } = this.state;
 
     return (
       <div className={classes.contentContainer}>
+        <div className={clsx(classes.volume, {[classes.hidden]: !displayVolume})}>
+          <div className={classes.volumeSlider} style={{ height: `${Math.round(volume * 100)}%` }}></div>
+        </div>
         <SwipeableViews key='swipeFullscreen' className={classes.gallery} containerStyle={{ width: '100%', height: '100%' }} index={index}>
           {videos.map((_, index) => this.renderFullScreenVideo(index))}
         </SwipeableViews>

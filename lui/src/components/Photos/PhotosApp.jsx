@@ -602,7 +602,7 @@ class PhotosApp extends Component {
 
   renderFavorite() {
     const { clicked, liked } = this.state;
-    return (<div>
+    return (<div onClick={() => this.handleThumb(!liked[clicked])}>
       { liked.hasOwnProperty(clicked) && liked[clicked] ? <FavoriteIcon/> : <FavoriteBorderIcon/> }
     </div>);
   }
