@@ -218,18 +218,18 @@ const styles = (theme) => ({
 
 // Videos from videvo
 const videos = [
-  'video (1).mp4',
-  'video (2).mp4',
-  'video (3).mp4',
-  'video (4).mov',
-  'video (5).mp4',
-  'video (6).mp4',
-  'video (7).mov',
-  'video (8).mp4',
-  'video (9).mp4',
-  'video (10).mp4',
-  'video (11).mp4',
-  'video (12).mp4',
+  'video (1).m4v',
+  'video (2).m4v',
+  'video (3).m4v',
+  'video (4).m4v',
+  'video (5).m4v',
+  'video (6).m4v',
+  'video (7).m4v',
+  'video (8).m4v',
+  'video (9).m4v',
+  'video (10).m4v',
+  'video (11).m4v',
+  'video (12).m4v',
 ];
 
 const opts = {
@@ -357,14 +357,15 @@ class VideosApp extends Component {
 
   handleIndex = (videoId, translation) => {
     const threshold = 0.5;
+    const ratio = 3;
     if (Math.abs(translation[0]) > threshold || Math.abs(translation[1]) > threshold) {
-      if (Math.abs(translation[0]) > Math.abs(translation[1])) {
+      if (Math.abs(translation[0]) > ratio * Math.abs(translation[1])) {
         // Move in the video
         let videoRef = this.fullScreenVideosRefs[videoId];
         const adjustment = videoRef.current.getDuration() / (3 * 60);
         let seconds = videoRef.current.getCurrentTime() - Math.round(translation[0]) * adjustment;
         videoRef.current.seekTo(seconds, 'seconds');
-      } else {
+      } else if (Math.abs(translation[1]) > ratio * Math.abs(translation[0])) {
         // Update volume
         this.setState(prevState => ({
           displayVolume: true,
