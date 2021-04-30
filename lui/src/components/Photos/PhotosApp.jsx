@@ -16,8 +16,6 @@ import FavoriteIcon from '@material-ui/icons/Favorite';
 import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
 
 import { css } from 'glamor';
-import { Transition } from 'react-transition-group';
-import Carousel from 'react-responsive-carousel';
 //firebase
 import firebase from 'firebase/app'
 import "firebase/database";
@@ -165,34 +163,23 @@ const styles = {
     height: '50px'
   },
 
-  control: {
-    flex: '1 1 0'
+  buttons: {
+    display: 'flex',
+    alignItems: 'center',
   },
 
   stepper: {
-    // display: 'auto',
     margin: 'auto',
     width: 'fit-content',
     maxWidth: '100%',
-    // marginLeft: 'auto',
-    // marginRight: 'auto',
-    //width: '8em',
     backgroundColor: 'rgb(0,0,0,0)',
-    //position: "absolute",
-    //bottom: "1px",
   },
 
   button: {
-    //position: 'fixed',
-    // bottom: '10px',
-    // left: '10px',
     color: "rgba(50,50,50,0.8)",
   },
 
   xbutton: {
-    position: 'fixed',
-    top: '10px',
-    right: '10px',
     color: "rgba(50,50,50,0.8)",
   }
 };
@@ -600,16 +587,9 @@ class PhotosApp extends Component {
       </div>);
   }
 
-  renderFavorite() {
-    const { clicked, liked } = this.state;
-    return (<div onClick={() => this.handleThumb(!liked[clicked])}>
-      { liked.hasOwnProperty(clicked) && liked[clicked] ? <FavoriteIcon/> : <FavoriteBorderIcon/> }
-    </div>);
-  }
-
   render() {
     const { classes } = this.props;
-    const { clicked } = this.state;
+    const { clicked, liked } = this.state;
 
     // Handling whether to go back to the Home page or display the Photos page
     if (this.state.exit) {
@@ -640,16 +620,25 @@ class PhotosApp extends Component {
             {/* Control bar */}
             <div className={classes.controlbar}>
               {/* Home button: */}
-              <div className={classes.control}>
-                <Button onClick={() => this.handleExit()}  className={classes.button}>
-                  <Home/>
-                </Button>
-              </div>
-              <div className={classes.control}>
+              <Button onClick={() => this.handleExit()}  className={classes.button}>
+                <Home/>
+              </Button>
+              <div>
                 { clicked != -1 ? this.renderFullScreenStepper() : this.renderStepper() }
               </div>
-              <div className={classes.control}>
-                { clicked != -1 ? this.renderFavorite() : <div></div> }
+              <div className={classes.buttons}>
+                {clicked !== -1 &&
+                  <>
+                    { liked.hasOwnProperty(clicked) && liked[clicked] ? (
+                      <FavoriteIcon onClick={() => this.handleThumb(false)}/> 
+                    ) : ( 
+                      <FavoriteBorderIcon onClick={() => this.handleThumb(true)}/> 
+                    )}
+                    <Button onClick={() => this.handleSwipeUp()} className={classes.xbutton}>
+                      <Clear />
+                    </Button>
+                  </>
+                }
               </div>
             </div>
           </div>

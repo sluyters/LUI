@@ -81,6 +81,30 @@ const styles = (theme) => ({
     backgroundColor: '#ECEFF1',
     overflow: 'hidden',
   },
+  maincontent: {
+    position: 'absolute',
+    bottom: '50px',
+    top: 0,
+    left: 0,
+    right: 0,
+    overflow: 'hidden'
+  },
+  controlbar: {
+    boxSizing: 'border-box',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 0,
+    padding: '5px',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50px'
+  },
+  control: {
+    flex: 0,
+  },
   frameContainer: {
     display: 'block',
     width: '25vw',
@@ -103,26 +127,21 @@ const styles = (theme) => ({
     zIndex: 5,
   },
   stepper: {
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    width: '8em',
+    margin: 'auto',
+    width: 'fit-content',
+    maxWidth: '100%',
     backgroundColor: 'rgba(0,0,0,0)',
-    position: "absolute",
-    bottom: "1px",
   },
   dots: {
     margin: 'auto',
   },
   button: {
-    position: 'fixed',
-    bottom: '10px',
-    left: '10px',
+    // position: 'fixed',
+    // bottom: '10px',
+    // left: '10px',
     color: "rgba(50,50,50,0.8)",
   },
   xbutton: {
-    position: 'fixed',
-    bottom: '10px',
-    right: '10px',
     color: "rgba(50,50,50,0.8)",
   },
   overviewPage: {
@@ -445,24 +464,6 @@ class VideosApp extends Component {
       <SwipeableViews key='swipeOverview' className={classes.gallery} containerStyle={{ width: '100%', height: '100%' }} index={index}>
         {pages}
       </SwipeableViews>
-      <MobileStepper
-        variant="dots"
-        steps={pages.length}
-        position="bottom"
-        activeStep={index}
-        className={classes.stepper}
-        classes={{ dots: classes.dots }}
-        nextButton={
-          <Button size="small" onClick={this.handleNext} disabled={index === pages.length - 1}>
-            <KeyboardArrowRight />
-          </Button>
-        }
-        backButton={
-          <Button size="small" onClick={this.handleBack} disabled={index === 0}>
-            <KeyboardArrowLeft />
-          </Button>
-        }
-      />
     </div>
     );
   }
@@ -506,30 +507,35 @@ class VideosApp extends Component {
         <SwipeableViews key='swipeFullscreen' className={classes.gallery} containerStyle={{ width: '100%', height: '100%' }} index={index}>
           {videos.map((_, index) => this.renderFullScreenVideo(index))}
         </SwipeableViews>
-        <div className="stepper">
-          <MobileStepper
-            variant="dots"
-            steps={videos.length}
-            position="bottom"
-            activeStep={index}
-            className={classes.stepper}
-            classes={{ dots: classes.dots }}
-            nextButton={
-              <Button size="small" onClick={() => this.handleSwipe("left")} disabled={index === videos.length - 1}>
-                <KeyboardArrowRight />
-              </Button>
-            }
-            backButton={
-              <Button size="small" onClick={() => this.handleSwipe("right")} disabled={index === 0}>
-                <KeyboardArrowLeft />
-              </Button>
-            }
-          />
-        </div>
-        <Button onClick={() => this.handleSwipeUp()} className={classes.xbutton}>
-          <Clear />
-        </Button>
       </div>
+    );
+  }
+
+  renderStepper() {
+    const { classes } = this.props;
+    const { index, zoomed } = this.state;
+
+    let numPages = (zoomed !== -1) ? videos.length : (videos.length / (N_COLS * N_ROWS));
+    let currentStep = (zoomed !== -1) ? zoomed : index;
+
+    return (numPages <= 1) ? "" : (
+      <MobileStepper
+        variant="dots"
+        steps={numPages}
+        activeStep={currentStep}
+        className={classes.stepper}
+        classes={{ dots: classes.dots }}
+        nextButton={
+          <Button size="small" onClick={() => this.handleSwipe("left")} disabled={currentStep >= numPages - 1}>
+            <KeyboardArrowRight />
+          </Button>
+        }
+        backButton={
+          <Button size="small" onClick={() => this.handleSwipe("right")} disabled={currentStep <= 0}>
+            <KeyboardArrowLeft />
+          </Button>
+        }
+      />
     );
   }
 
@@ -554,11 +560,28 @@ class VideosApp extends Component {
             handleIndex={this.handleIndex}
           />
 
-          {zoomed != -1 ? this.renderFullScreen(zoomed) : this.renderVideos()}
+          {/* Handling whether to render a full screen photo or not */}
+          <div className={classes.maincontent}>
+            { zoomed != -1 ? this.renderFullScreen(zoomed) : this.renderVideos() }
+          </div>
 
-          <Button onClick={() => this.handleExit()} className={classes.button}>
-            <Home />
-          </Button>
+          {/* Control bar */}
+          <div className={classes.controlbar}>
+            {/* Home button: */}
+            <Button onClick={() => this.handleExit()}  className={classes.button}>
+              <Home/>
+            </Button>
+            <div className={classes.control}>
+              {this.renderStepper()}
+            </div>
+            <div className={classes.control}>
+              {zoomed !== -1 &&
+                <Button onClick={() => this.handleSwipeUp()} className={classes.xbutton}>
+                  <Clear />
+                </Button>
+              }
+            </div>
+          </div>
         </div>
       </Wrapper>
     );
