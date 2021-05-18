@@ -79,7 +79,7 @@ class Leap extends React.Component {
                     this.props.handleRotate(gesture.data.rotation);
                     break;
                 case 'pinch':
-                    this.props.handlePinch(gesture.data.pinch);
+                    this.props.handlePinch(gesture.data.pinch, gesture.data.translation);
                     break;
                 default:
                     console.log(`No action associated to '${gesture.name}' gesture.`)

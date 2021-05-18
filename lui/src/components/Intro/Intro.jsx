@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import backDrop from './backdrop.png';
+import backDrop from './backdrop2.png';
 import './Intro.css';
 import { css } from 'glamor';
 import glamorous from 'glamorous'
@@ -46,6 +46,7 @@ const fingers = ["#9bcfed", "#B2EBF2", "#80DEEA", "#4DD0E1", "#26C6DA"];
 const styles = {
 
   backDrop: {
+    objectFit: 'cover',
     width: '100%',
     height: '100%',
   },
@@ -139,7 +140,6 @@ class Intro extends Component {
         <Wrapper isMounted={this.props.isMounted} page={this.props.page}>
           <div>
             
-            {/* <canvas className={classes.canvas} ref="canvas"></canvas> */}
             <Leap
               handleClick={this.handleClick}
               handleSwipeUp={this.handleSwipeUp}

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import clsx from 'clsx';
 import { Redirect } from 'react-router';
 import { withStyles } from '@material-ui/core/styles';
 import glamorous from 'glamorous'
@@ -13,15 +14,14 @@ import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import Home from '@material-ui/icons/Home';
 import Clear from '@material-ui/icons/Clear';
+import { Document, Page, pdfjs } from "react-pdf";
 
 import { css } from 'glamor';
-import { Transition } from 'react-transition-group';
-import Carousel from 'react-responsive-carousel';
 //firebase
 import firebase from 'firebase/app'
 import "firebase/database";
 
-import { Document, Page, pdfjs } from "react-pdf";
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
 
 const zoomIn = css.keyframes({
@@ -33,7 +33,9 @@ const zoomIn = css.keyframes({
 const styles = {
 
   gallery: {
-    animation: `${zoomIn} 1s`
+    animation: `${zoomIn} 1s`,
+    width: '100%',
+    height: '100%',
   },
 
   container: {
@@ -52,43 +54,49 @@ const styles = {
   },
 
   carousel: {
-    // width: '90%',
-    maxHeight: '95%',
+    width: '100%',
+    height: '100%',
     padding: '0px',
     margin: '0px',
     overflow: 'hidden',
   },
 
   row: {
-    maxHeight: '50vh',
+    height: '50%',
   },
 
   cell: {
-    display: 'inline-block',
-    maxWidth: '85%',
-    maxHeight: '85%',
-    verticalAlign: 'middle',
-    boxSizing: 'border-box',
-    margin: '0px',
-    padding: '3%',
-    position: 'relative',
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
 
   thumbnail: {
-    display: 'block',
-    maxWidth: '90%',
-    maxHeight: '60%',
-    width: 'auto',
-    height: '300px',
-    margin: 'auto',
+    width: '70%',
+    height: '70%',
     padding: '3%',
-    border: 'none',
-    transform: 'scale(1)',
-    transition: 'all 0.4s',
+    boxSizing: 'border-box',
     boxShadow: '0px 0px 10px 2px #999',
     backgroundColor: "#ECEFF1",
-    position: "relative",
+    transform: 'scale(1)',
+    transition: 'all 0.4s',
     zIndex: '1'
+  },
+
+  thumbnailPage: {
+    height: '100% !important',
+    width: '100% !important',
+    display: 'flex',
+    justifyContent: 'center', 
+    alignItems: 'center',
+    '& *': {
+      width: 'auto !important',
+      height: 'auto !important',
+      maxHeight: '100% !important',
+      maxWidth: '100% !important',
+    }
   },
 
   hovered: {
@@ -108,7 +116,10 @@ const styles = {
     top: '50px',
     left: 0,
     right: 0,
-    overflow: 'hidden'
+    overflow: 'hidden',
+    display: 'flex',
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
 
   pdf: {
@@ -116,6 +127,19 @@ const styles = {
     height: 'fit-content',
     width: 'fit-content',
     margin: 'auto'
+  },
+
+  transition: {
+    transition: 'all 0.2s',
+  },
+
+  imageBox: {
+    height: '100%',
+    width: '100%',
+    display: 'flex', 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
 
   controlbar: {
@@ -182,14 +206,14 @@ const Wrapper = glamorous.div(props => ({
   zIndex: 5
 }))
 const pdfs = [require('./pdfs/test1.pdf'),
-              require('./pdfs/test2.pdf'),
+              require('./pdfs/test5.pdf'),
               require('./pdfs/test3.pdf'),
-              require('./pdfs/test1.pdf'),
+              require('./pdfs/test7.pdf'),
               require('./pdfs/test2.pdf'),
-              require('./pdfs/test3.pdf'),
-              require('./pdfs/test1.pdf'),
-              require('./pdfs/test2.pdf'),
-              require('./pdfs/test3.pdf')]
+              require('./pdfs/test4.pdf'),
+              require('./pdfs/test6.pdf'),
+              require('./pdfs/test8.pdf'),
+              require('./pdfs/test9.pdf')]
 
 //firebase
 const firebaseConfig = {
@@ -208,7 +232,7 @@ firebase.initializeApp(firebaseConfig);
 var database = firebase.database();
 var currentRef = database.ref('voice');
 //end
-class PDFsApp extends Component {
+class DocumentsApp extends Component {
   constructor(props) {
     super(props);
 
@@ -228,9 +252,11 @@ class PDFsApp extends Component {
       exit: false,
       amiclicked:false,
       rotation: 0, // Rotate pdf
-      zoom: 1.0
+      transition: false,
+      zoom: 1.0,
+      translation: { x: 0.0, y: 0.0 }
     };
-
+    this.rotateTimeout = undefined;
     this.handleClick = this.handleClick.bind(this);
   }
 
@@ -282,10 +308,19 @@ class PDFsApp extends Component {
   }
 
   handleClick = (pdfId) => {
-    this.setState({ clicked: pdfId })
-    this.setState({ amiclicked: true })
-    this.setState({ currentPage: 1 })
-    this.setState({ rotation: 0 }) 
+    // this.setState({ clicked: pdfId })
+    // this.setState({ amiclicked: true })
+    // this.setState({ currentPage: 1 })
+    // this.setState({ rotation: 0 }) 
+
+    this.setState({ 
+      clicked: pdfId, 
+      amiclicked: true,
+      currentPage: 1,
+      zoom: 1.0,
+      rotation: 0.0,
+      translation: { x: 0.0, y: 0.0 },
+    });
   }
 
   handleExit = () => {
@@ -294,20 +329,47 @@ class PDFsApp extends Component {
     })
   }
 
-  handleRotate = (handRotation) => {
-    this.setState(prevState => ({ rotation: (prevState.rotation + 180 * handRotation / 3.14) }))
+  handleRotate = (handRotation) => {  
+    const { rotation } = this.state;
+    clearTimeout(this.rotateTimeout);
+    let newRotation = Math.round((rotation + 180 * handRotation / 3.14) * 10) / 10;
+    if (newRotation < 0) {
+      newRotation += 360;
+    }
+    if (newRotation !== rotation) {
+      this.setState({ 
+        rotation: newRotation,
+      });
+    }
+    this.rotateTimeout = setTimeout(() => {
+      this.setState({
+        rotation: Math.round(rotation / 90) * 90,
+        transition: true,
+      });
+      setTimeout(() => {
+        this.setState({
+          transition: false,
+        });
+      }, 200);
+    }, 200);
   }
 
-  handlePinch = (pinch) => {
+  handlePinch = (pinch, handTranslation) => {
     let { clicked, zoom } = this.state;
     if (clicked != -1) {
-      zoom *= ((pinch - 1) * 1.2) + 1;
-      if (zoom < 0.4) {
-        zoom = 0.4;
-      } else if (zoom > 4) {
-        zoom = 4;
-      }
-      this.setState({ zoom })
+      this.setState(prevState => { 
+        let zoom = Math.round((prevState.zoom * (((pinch - 1) * 1.2) + 1)) * 50) / 50;
+        if (zoom < 0.4) {
+          zoom = 0.4;
+        } else if (zoom > 4) {
+          zoom = 4;
+        }
+        let translation = {
+          x: prevState.translation.x + handTranslation[0] * 6,
+          y: prevState.translation.y + handTranslation[1] * -6,
+        }
+        return { zoom, translation };
+      });
     }
   }
 
@@ -347,27 +409,13 @@ class PDFsApp extends Component {
   handleSwipeUp = () => {
     let { clicked } = this.state;
     if (clicked != -1) {
-      this.setState({ clicked: -1 });
-      this.setState({ amiclicked: false });
+      this.setState({ 
+        clicked: -1, 
+        amiclicked: false,
+      });
     } else {
       this.setState({ exit: true });
     }
-  }
-
-  renderPDF(index) { //renders a pdf in the grid
-    const { classes } = this.props;
-    const { hovered, refs } = this.state;
-    const ref = refs[index]
-
-    return (<Grid item className={classes.cell} ref={ref} xs={12} sm={3}>
-      <div
-        onMouseEnter={() => { this.setState({hovered: index}) }}
-        onMouseLeave={() => { this.setState({hovered: -1}) }}
-        onClick={() => { this.handleClick(index) }}
-        className={hovered === index ? classNames(classes.thumbnail, classes.hovered) : classes.thumbnail} >
-          {pdfs[index]}
-      </div>
-    </Grid>);
   }
 
   onDocumentLoadSuccess = (document) => {
@@ -386,21 +434,48 @@ class PDFsApp extends Component {
     }
   }
 
+  renderPDF(index) { //renders a pdf in the grid
+    const { classes } = this.props;
+    const { hovered, refs } = this.state;
+    const ref = refs[index]
+
+    return (<Grid item className={classes.cell} ref={ref} xs={12} sm={3}>
+      <Document
+        file={pdfs[index]}
+        onLoadSuccess={this.onDocumentLoadSuccess}
+        onLoadError={console.error}
+        onMouseEnter={() => { this.setState({hovered: index}) }}
+        onMouseLeave={() => { this.setState({hovered: -1}) }}
+        onClick={() => { this.handleClick(index) }}
+        className={hovered === index ? classNames(classes.thumbnail, classes.hovered) : classes.thumbnail} 
+      >
+          {/* {pdfs[index]} */}
+        <Page pageNumber={1} className={classes.thumbnailPage} />
+      </Document>
+    </Grid>);
+  }
+
   renderFullScreen(index) { //renders the full screen gallery view for the pdfs
     const { classes } = this.props;
-    const { rotation, zoom, currentPage, numPages } = this.state;
-    let pdfRotation = Math.round(rotation / 90) * 90;
+    const { translation, rotation, zoom, currentPage, transition } = this.state;
     return (<div>
       {/* PDF */}
         <div className={classes.pdf} justify={"center"}>
-            <Document
-              file={pdfs[index]}
-              onLoadSuccess={this.onDocumentLoadSuccess}
-              onLoadError={console.error}
-              rotate={pdfRotation}
+          <div className={classes.pdfBox} style={{transform: `translate(${translation.x}px,${translation.y}px)`, willChange: 'transform, box-shadow, z-index'}} >
+            <div 
+              className={clsx({[classes.transition]: transition})}
+              style={{ transform: `rotate(${rotation}deg) scale3d(${zoom}, ${zoom}, 1)`, willChange: 'transform, box-shadow, z-index'}}
             >
-              <Page pageNumber={currentPage} scale={zoom} className={classes.pdfpage} />
-            </Document>
+              <Document
+                file={pdfs[index]}
+                onLoadSuccess={this.onDocumentLoadSuccess}
+                onLoadError={console.error}
+              >
+                <Page pageNumber={currentPage} />
+              </Document>
+            </div>
+            
+          </div>
         </div>
       {/* Exit button: */}
       <Button onClick={() => this.handleSwipeUp()}  className={classes.xbutton}> 
@@ -409,7 +484,7 @@ class PDFsApp extends Component {
     </div>);
   }
 
-  renderPDFs() { //renders the full grid of pdfs
+  renderDocuments() { //renders the full grid of pdfs
     const { classes } = this.props;
     const { index, refs } = this.state;
     let pages = [];
@@ -442,13 +517,11 @@ class PDFsApp extends Component {
       </div>);
     }
 
-    return (<div>
-      <div>
-        <SwipeableViews className={classes.gallery} index={index}>
-          {pages}
-        </SwipeableViews>
-      </div>
-    </div>);
+    return (
+      <SwipeableViews className={classes.gallery} index={index} containerStyle={{ width: '100%', height: '100%' }}>
+        {pages}
+      </SwipeableViews>
+    );
   }
 
   renderStepper() {
@@ -490,7 +563,7 @@ class PDFsApp extends Component {
     const { classes } = this.props;
     const { clicked } = this.state;
 
-    // Handling whether to go back to the Home page or display the PDFs page
+    // Handling whether to go back to the Home page or display the Documents page
     if (this.state.exit) {
       console.log("EXITING")
       return <Redirect to={{ pathname: "/Home", state: {page: "home"} }} />
@@ -498,37 +571,35 @@ class PDFsApp extends Component {
 
     return (
       <Wrapper isMounted={this.props.isMounted} exit={this.state.exit}>
-        <div>
-          <div className={classes.container} justify={"center"}>
-            <Leap
-              pdfs={this.state.refs}
-              handleHover={this.handleHover}
-              handleClick={this.handleClick}
-              amiclicked = {this.state.amiclicked}              
-              handleSwipe={this.handleSwipe}
-              handleSwipeUp={this.handleSwipeUp}
-              handleRotate={this.handleRotate}
-              handlePinch={this.handlePinch}
-            />
+        <div className={classes.container} justify={"center"}>
+          <Leap
+            pdfs={this.state.refs}
+            handleHover={this.handleHover}
+            handleClick={this.handleClick}
+            amiclicked = {this.state.amiclicked}              
+            handleSwipe={this.handleSwipe}
+            handleSwipeUp={this.handleSwipeUp}
+            handleRotate={this.handleRotate}
+            handlePinch={this.handlePinch}
+          />
 
-            {/* Handling whether to render a full screen pdf or not */}
-            <div className={classes.maincontent}>
-              { clicked != -1 ? this.renderFullScreen(clicked) : this.renderPDFs() }
+          {/* Handling whether to render a full screen pdf or not */}
+          <div className={classes.maincontent}>
+            { clicked != -1 ? this.renderFullScreen(clicked) : this.renderDocuments() }
+          </div>
+
+          {/* Control bar */}
+          <div className={classes.controlbar}>
+            {/* Home button: */}
+            <div className={classes.control}>
+              <Button onClick={() => this.handleExit()}  className={classes.button}>
+                <Home/>
+              </Button>
             </div>
-
-            {/* Control bar */}
-            <div className={classes.controlbar}>
-              {/* Home button: */}
-              <div className={classes.control}>
-                <Button onClick={() => this.handleExit()}  className={classes.button}>
-                  <Home/>
-                </Button>
-              </div>
-              <div className={classes.control}>
-                { clicked != -1 ? this.renderPageSelection() : this.renderStepper() }
-              </div>
-              <div className={classes.control}>
-              </div>
+            <div className={classes.control}>
+              { clicked != -1 ? this.renderPageSelection() : this.renderStepper() }
+            </div>
+            <div className={classes.control}>
             </div>
           </div>
         </div>
@@ -537,4 +608,4 @@ class PDFsApp extends Component {
   }
 }
 
-export default withStyles(styles)(PDFsApp);
+export default withStyles(styles)(DocumentsApp);

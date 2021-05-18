@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import clsx from 'clsx';
 import { Redirect } from 'react-router';
 import { withStyles } from '@material-ui/core/styles';
 import glamorous from 'glamorous'
@@ -50,7 +51,6 @@ const styles = {
   },
 
   carousel: {
-    // width: '90%',
     width: '100%',
     height: '100%',
     padding: '0px',
@@ -59,7 +59,7 @@ const styles = {
   },
 
   row: {
-    maxHeight: '50vh',
+    height: '50%',
   },
 
   fullScreenContainer: { 
@@ -78,14 +78,11 @@ const styles = {
   },
 
   cell: {
-    display: 'inline-block',
-    maxWidth: '85%',
-    maxHeight: '85%',
-    verticalAlign: 'middle',
-    boxSizing: 'border-box',
-    margin: '0px',
-    padding: '3%',
-    position: 'relative',
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
 
   image: {
@@ -122,13 +119,16 @@ const styles = {
     padding: '30px',
     border: 'none',
     transform: 'scale(1)',
-    transition: 'all 0.2s',
     boxShadow: '0px 0px 10px 2px #999',
     backgroundColor: "#ECEFF1",
     position: "relative",
     zIndex: '1',
     maxHeight: '90%',
     maxWidth: '90%'
+  },
+
+  transition: {
+    transition: 'all 0.2s',
   },
 
   dots: {
@@ -275,6 +275,7 @@ class PhotosApp extends Component {
       index: 0,
       exit: false,
       rotation: 0, // Added - rotate image
+      transition: false,
       zoom: 1.0,
       translation: { x: 0.0, y: 0.0 }
     };
@@ -357,7 +358,13 @@ class PhotosApp extends Component {
     this.rotateTimeout = setTimeout(() => {
       this.setState({
         rotation: Math.round(rotation / 90) * 90,
+        transition: true,
       });
+      setTimeout(() => {
+        this.setState({
+          transition: false,
+        });
+      }, 200);
     }, 200);
   }
 
@@ -377,11 +384,6 @@ class PhotosApp extends Component {
         return { zoom, translation };
       });
     }
-  }
-
-  handleTranslate = (translation) => {
-    console.log("translate");
-    console.log(translation);
   }
 
   handleThumb = (isUp) => {
@@ -455,14 +457,14 @@ class PhotosApp extends Component {
 
   renderFullScreenPhoto(index) { //renders the selected photo in full screen view
     const { classes } = this.props;
-    const { rotation, zoom, translation } =  this.state; 
+    const { rotation, zoom, translation, transition } =  this.state; 
     return (
       <div className={classes.fullScreenContainer}>
         <div className={classes.imageBox} style={{transform: `translate(${translation.x}px,${translation.y}px)`, willChange: 'transform, box-shadow, z-index'}} > 
           <img
             style={{ transform: `rotate(${rotation}deg) scale3d(${zoom}, ${zoom}, 1)`, willChange: 'transform, box-shadow, z-index'}} 
             onClick={() => { this.rotate() }}
-            className={classes.zoomed}
+            className={clsx(classes.zoomed, {[classes.transition]: transition})}
             src={`/photos/${photos[index]}`}/>
         </div>
       </div>
@@ -525,13 +527,9 @@ class PhotosApp extends Component {
     }
 
     return (
-      <div>
-        <div>
-          <SwipeableViews className={classes.gallery} index={index}>
-            {pages}
-          </SwipeableViews>
-        </div>
-      </div>
+      <SwipeableViews className={classes.gallery} index={index} containerStyle={{ width: '100%', height: '100%' }}>
+        {pages}
+      </SwipeableViews>
     );
   }
 

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import LeapMotion from 'leapjs';
-import React, { Component } from 'react';
+import React from 'react';
 import { Redirect } from 'react-router';
 import $ from 'jquery';
 import { withStyles } from '@material-ui/core/styles';
@@ -177,7 +177,7 @@ class ModelApp extends React.Component {
     scene.add(coords3);
 
     // world coordinate system (thin dashed helping lines)
-    var lineGeometry = new THREE.Geometry();
+    var lineGeometry = new THREE.BufferGeometry();
     var vertArray = lineGeometry.vertices;
     vertArray.push(new THREE.Vector3(1000, 0, 0), origin, new THREE.Vector3(0, 1000, 0), origin, new THREE.Vector3(0, 0, 1000));
     var lineMaterial = new THREE.LineDashedMaterial({ color: 0xcccccc, dashSize: 1, gapSize: 2 });
@@ -186,7 +186,7 @@ class ModelApp extends React.Component {
 
     // cubes
     for (var i = 0; i < 20; i++) {
-      var geometry = new THREE.CubeGeometry(Math.random() * 60, Math.random() * 60, Math.random() * 60);
+      var geometry = new THREE.BoxGeometry(Math.random() * 60, Math.random() * 60, Math.random() * 60);
       var object = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0xefefef }));
       object.position.x = Math.random() * 300 - 150;
       object.position.y = Math.random() * 300 - 150;

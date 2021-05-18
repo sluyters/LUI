@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { ButtonBase, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
-import DocumentsApp from './DocumentsApp.jsx';
+import MapsApp from './MapsApp.jsx';
 import { Link } from 'react-router-dom'
 
 
@@ -80,22 +80,32 @@ const styles = theme => ({
 });
 
 const image = {
-    url: 'https://images.unsplash.com/photo-1523906891494-64b456bf3c9e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80',
-    title: 'Documents',
+    url: 'https://images.unsplash.com/photo-1604549944235-3e5579b15cc2?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1051&q=80',
+    title: 'Maps',
     width: '100%',
 };
 
-class Documents extends Component {
+class Photos extends Component {
 
     constructor(props) {
         super(props);
+
+        // this.state = {isClicked: false};
+    
+        // this.handleClick = this.handleClick.bind(this);
     }
+
+    // handleClick() {
+    //     this.setState({
+    //       isClicked: true
+    //     });
+    //   }
 
     render() {
         const { classes, hovered, clicked } = this.props;
 
         if (clicked) {
-            return <Redirect to={{pathname: "/Documents"}} />
+            return <Redirect to={{pathname: "/Maps"}} />
         } else {
             // icon 
             return (
@@ -107,6 +117,7 @@ class Documents extends Component {
                     style={{
                         width: image.width,
                     }}
+                    //component={this.props.link}
                     onClick  = {this.props.onclick}
                 >
                     <span
@@ -133,9 +144,15 @@ class Documents extends Component {
     }
 }
 
-Documents.propTypes = {
+Photos.propTypes = {
     hovered: PropTypes.bool,
     clicked: PropTypes.bool,
 };
 
-export default withStyles(styles)(Documents);
+// Photos.defaultProps = {
+//     hovered: false,
+//     clicked: false
+// };
+
+export default withStyles(styles)(Photos);
+
