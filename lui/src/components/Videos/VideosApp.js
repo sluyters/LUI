@@ -136,9 +136,6 @@ const styles = (theme) => ({
     margin: 'auto',
   },
   button: {
-    // position: 'fixed',
-    // bottom: '10px',
-    // left: '10px',
     color: "rgba(50,50,50,0.8)",
   },
   xbutton: {
