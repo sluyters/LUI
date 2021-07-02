@@ -4,6 +4,9 @@ import PropTypes from 'prop-types';
 import { ButtonBase, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
+import DicomViewerApp from './DicomViewerApp.jsx';
+import { Link } from 'react-router-dom'
+
 
 const styles = theme => ({
     root: {
@@ -12,7 +15,6 @@ const styles = theme => ({
         width: '100%',
         height: '100%'
     },
-
     image: {
         position: 'relative',
         height: '100%',
@@ -21,7 +23,7 @@ const styles = theme => ({
         },
     },
     hovered: {
-        zIndex: 1,
+        zIndex: 5,
         '& $imageBackdrop': {
             opacity: 0.15,
         },
@@ -78,35 +80,34 @@ const styles = theme => ({
 });
 
 const image = {
-    url: '/thumbnails/videos.jpg',
-    title: 'Videos',
+    url: '/thumbnails/dicom_viewer.jpg',
+    title: 'Medical Images',
     width: '100%',
 };
 
-class Videos extends Component {
+class DicomViewer extends Component {
 
     constructor(props) {
         super(props);
 
-        this.state = {
-            clicked: false
-        };
+        // this.state = {isClicked: false};
+    
+        // this.handleClick = this.handleClick.bind(this);
     }
 
-    handleClick = () => {
-        this.setState({
-            clicked: true
-        });
-    }
+    // handleClick() {
+    //     this.setState({
+    //       isClicked: true
+    //     });
+    //   }
 
     render() {
         const { classes, hovered, clicked } = this.props;
 
-        if ( clicked ) {
-            // full app
-            return <Redirect to={{pathname: "/Videos"}} />
+        if (clicked) {
+            return <Redirect to={{pathname: "/DicomViewer"}} />
         } else {
-            // icon
+            // icon 
             return (
                 <ButtonBase
                     focusRipple
@@ -116,6 +117,8 @@ class Videos extends Component {
                     style={{
                         width: image.width,
                     }}
+                    //component={this.props.link}
+                    onClick  = {this.props.onclick}
                 >
                     <span
                         className={classes.imageSrc}
@@ -124,7 +127,7 @@ class Videos extends Component {
                         }}
                     />
                     <span className={classes.imageBackdrop} />
-                    <span className={classes.imageButton} onClick={() => this.handleClick()} >
+                    <span className={classes.imageButton}>
                         <Typography
                             component="span"
                             variant="subheading"
@@ -141,14 +144,15 @@ class Videos extends Component {
     }
 }
 
-Videos.propTypes = {
+DicomViewer.propTypes = {
     hovered: PropTypes.bool,
     clicked: PropTypes.bool,
 };
 
-Videos.defaultProps = {
-    hovered: false,
-    clicked: false
-};
+// Photos.defaultProps = {
+//     hovered: false,
+//     clicked: false
+// };
 
-export default withStyles(styles)(Videos);
+export default withStyles(styles)(DicomViewer);
+

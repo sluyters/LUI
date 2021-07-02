@@ -112,18 +112,30 @@ class MapsApp extends Component {
     })
   }
 
-  handlePinch = (pinch) => {
-    this.setState(prevState => { 
-      let zoom = prevState.zoom;
-      let zoomFactor = 0.2 * (1 + Math.pow((18 - zoom), 3) / 600);
-      let newZoom = Math.round((zoom * (((pinch - 1) * zoomFactor) + 1)) * 100) / 100;
-      newZoom = Math.min(18, Math.max(0.5, newZoom));
-      if (Math.abs(newZoom - zoom) < 1 && newZoom !== zoom) {
-        zoom = newZoom
-        this.map.flyTo(this.map.getCenter(), zoom)
-      }
-      return { zoom };
-    });
+  handlePinch = (pinch, handTranslation) => {
+    
+    
+    // if (Math.abs(pinch) < 1.2 * Math.abs(handTranslation[1]) || Math.abs(pinch) < 1.2 * Math.abs(handTranslation[0])) {
+    //   // Translate
+    //   let translation = [
+    //     handTranslation[0] * -50,
+    //     handTranslation[1] * 50
+    //   ];
+    //   this.map.panBy(translation);
+    // } else {
+      // Zoom
+      this.setState(prevState => { 
+        let zoom = prevState.zoom;
+        let zoomFactor = 0.2 * (1 + Math.pow((18 - zoom), 3) / 600);
+        let newZoom = Math.round((zoom * (((pinch - 1) * zoomFactor) + 1)) * 100) / 100;
+        newZoom = Math.min(18, Math.max(0.5, newZoom));
+        if (Math.abs(newZoom - zoom) < 1 && newZoom !== zoom) {
+          zoom = newZoom
+          this.map.flyTo(this.map.getCenter(), zoom)
+        }
+        return { zoom };
+      });
+    // }
   }
 
   handleTranslate = (handTranslation) => {
@@ -164,7 +176,7 @@ class MapsApp extends Component {
 
             {/* Handling whether to render a full screen photo or not */}
             <div className={classes.maincontent}>
-              <MapContainer whenCreated={(map) => this.map = map} center={[51.505, -0.09]} zoomSnap={0} zoom={zoom} style={{ height: '100%', width: '100%' }}>
+              <MapContainer whenCreated={(map) => this.map = map} center={[50.669923420711996, 4.616001941428229]} zoomSnap={0} zoom={zoom} style={{ height: '100%', width: '100%' }}>
                 <TileLayer
                   attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

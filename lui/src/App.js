@@ -11,6 +11,7 @@ import Prismatic from './components/Prismatic/\\';
 import CandyCrush from './components/CandyCrush';
 import Documents from './components/Documents';
 import Maps from './components/Maps';
+import DicomViewer from './components/DicomViewer';
 import GestureKeyboard from './components/GestureKeyboard';
 import Leap from './leap.js';
 // import axios from 'axios';
@@ -262,8 +263,9 @@ class App extends Component {
               onClick={() => { this.setState({ clicked: "card5" }) }}
               onMouseEnter={() => { this.setState({ hovered: "card5" }) }}
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
+              <DicomViewer hovered={this.state.hovered === "card5"} clicked={this.state.clicked === "card5"} />
               {/* <GestureKeyboard hovered={this.state.hovered === "card5"} clicked={this.state.clicked === "card5"} /> */}
-              <GestureKeyboard hovered={false} clicked={false} />
+              {/* <GestureKeyboard hovered={false} clicked={false} /> */}
             </Grid>
             <Grid ref="card6" item xs={4}
               onClick={() => { this.setState({ clicked: "card6" }) }}

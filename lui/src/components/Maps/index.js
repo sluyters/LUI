@@ -80,12 +80,12 @@ const styles = theme => ({
 });
 
 const image = {
-    url: 'https://images.unsplash.com/photo-1604549944235-3e5579b15cc2?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1051&q=80',
+    url: '/thumbnails/maps.jpg',
     title: 'Maps',
     width: '100%',
 };
 
-class Photos extends Component {
+class Maps extends Component {
 
     constructor(props) {
         super(props);
@@ -144,7 +144,7 @@ class Photos extends Component {
     }
 }
 
-Photos.propTypes = {
+Maps.propTypes = {
     hovered: PropTypes.bool,
     clicked: PropTypes.bool,
 };
@@ -154,5 +154,5 @@ Photos.propTypes = {
 //     clicked: false
 // };
 
-export default withStyles(styles)(Photos);
+export default withStyles(styles)(Maps);
 

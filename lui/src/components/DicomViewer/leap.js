@@ -48,7 +48,7 @@ class Leap extends React.Component {
                     break;
                 }
                 case 'point-index':
-                    this.props.handleTranslate(gesture.data.translation);
+                    this.props.handlePoint(gesture.data.translation);
                     break;
                 case 'pinch':
                     this.props.handlePinch(gesture.data.pinch, gesture.data.translation);
@@ -162,7 +162,7 @@ Leap.propTypes = {
     handleExit: PropTypes.func,
     handleRotate: PropTypes.func,        
     handlePinch: PropTypes.func,         
-    handleTranslate: PropTypes.func,
+    handlePoint: PropTypes.func,
     handleThumb: PropTypes.func
 };
 

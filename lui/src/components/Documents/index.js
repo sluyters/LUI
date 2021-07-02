@@ -80,7 +80,7 @@ const styles = theme => ({
 });
 
 const image = {
-    url: 'https://images.unsplash.com/photo-1523906891494-64b456bf3c9e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80',
+    url: '/thumbnails/documents.jpg',
     title: 'Documents',
     width: '100%',
 };

@@ -8,6 +8,7 @@
     "@material-ui/icons": "^3.0.2",
     "@material-ui/lab": "^4.0.0-alpha.47",
     "axios": "^0.21.1",
+    "dwv": "^0.29.0",
     "firebase": "^8.2.3",
     "glamor": "^2.20.40",
     "glamorous": "^4.13.1",
