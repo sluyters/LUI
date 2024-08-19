@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import clsx from 'clsx';
+import { Grid } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
+import YouTube from 'react-youtube';
 import ReactPlayer from 'react-player/file';
+import Leap from './leap.js'
 import { Redirect } from 'react-router';
 import glamorous from 'glamorous'
 import { css } from 'glamor';
@@ -11,45 +14,225 @@ import Button from '@material-ui/core/Button';
 import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
 import Home from '@material-ui/icons/Home';
+//add firebase
+import firebase from 'firebase/app'
+import "firebase/database";
 import Clear from '@material-ui/icons/Clear';
 import { createRef } from 'react';
 import AspectRatio from './AspectRatio';
-import ReactDOM from 'react-dom';
-import { styles } from './styles';
-import GestureHandler from 'quantumleapjs';
 
 const N_ROWS = 2;
 const N_COLS = 3;
 
-const videoSizeOffset = 100;
+const zoomIn = css.keyframes({
+  '0%': { transform: 'scale(0.5)' },
+  '100%': { transform: 'scale(1)' }
+})
+//firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDjM37_DSv2RvPQzl5YiVzmgRHfpd4rJFU",
+  authDomain: "lui-medialab.firebaseapp.com",
+  databaseURL: "https://lui-medialab.firebaseio.com",
+  projectId: "lui-medialab",
+  storageBucket: "lui-medialab.appspot.com",
+  messagingSenderId: "247289397118",
+  appId: "1:247289397118:web:eb2bcb0076d4bb4d"
+};
 
-// Fingers styling
-const fingers = ["#9bcfedBB", "#B2EBF2CC", "#80DEEABB", "#4DD0E1BB", "#26C6DABB"];
-const left_fingers = ["#d39bed", "#e1b1f1", "#ca80ea", "#b74ce1", "#a425da"];
-const paused_fingers = ["#9bed9b", "#b1f0b1", "#80ea80", "#4ce14c", "#25da25"];
-const pausedStatic_fingers = ["#ee0231", "#e50b36", "#dc143c", "#d31d42", "#ca2647"];
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+var database = firebase.database();
+var currentRef = database.ref('voice');
+//end
 
-// Animations entering/exiting this page:
-const fadeIn = css.keyframes({
-  '0%': { opacity: 0 },
-  '100%': { opacity: 1 }
+const styles = (theme) => ({
+  gallery: {
+    animation: `${zoomIn} 0.5s`,
+    height: '95vh',
+  },
+  carousel: {
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0)',
+  },
+  row: {
+    height: '30%',
+    margin: '2%'
+  },
+  contentContainer: {
+    width: '100%', 
+    height: '100%',
+  },
+  container: {
+    position: 'absolute',
+    top: '0px',
+    left: '0px',
+    width: '100%',
+    height: '100%',
+    padding: '0px',
+    listStyle: 'none',
+    overflow: 'none',
+    zIndex: '1',
+    backgroundColor: '#ECEFF1',
+    overflow: 'hidden',
+  },
+  maincontent: {
+    position: 'absolute',
+    bottom: '50px',
+    top: 0,
+    left: 0,
+    right: 0,
+    overflow: 'hidden'
+  },
+  controlbar: {
+    boxSizing: 'border-box',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 0,
+    padding: '5px',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50px'
+  },
+  control: {
+    flex: 0,
+  },
+  frameContainer: {
+    display: 'block',
+    width: '25vw',
+    height: '27vh',
+    verticalAlign: 'middle',
+    padding: '0px',
+    boxShadow: '0px 0px 10px 2px #999',
+    overflow: 'hidden',
+    position: 'relative',
+    zIndex: 5
+  },
+  zoomed: {
+    width: '100vw',
+    height: '93vh',
+  },
+  hovered: {
+    transform: 'scale(1.15)',
+    transition: '200ms ease-out',
+    position: 'relative',
+    zIndex: 5,
+  },
+  stepper: {
+    margin: 'auto',
+    width: 'fit-content',
+    maxWidth: '100%',
+    backgroundColor: 'rgba(0,0,0,0)',
+  },
+  dots: {
+    margin: 'auto',
+  },
+  button: {
+    color: "rgba(50,50,50,0.8)",
+  },
+  xbutton: {
+    color: "rgba(50,50,50,0.8)",
+  },
+  overviewPage: {
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  overviewRow: {
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoPreviewContainer: {
+    height: '90%',
+    width: '90%',
+    zIndex: 50,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoPreview: {
+    width: '80%', 
+    boxShadow: '0px 0px 10px 2px #999', 
+    transition: 'all 0.2s',
+  },
+  videoPreviewHovered: {
+    transform: 'scale(1.1)',
+  },
+  videoFullscreenContainer: {
+    height: '95%',
+    width: '95%',
+    zIndex: 50,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoFullscreen: {
+    maxWidth: 'calc(85vh * (16/9))',
+    width: '90%', 
+    boxShadow: '0px 0px 10px 2px #999', 
+  },
+  reactPlayer: {
+    '& > video': {
+      display: 'block',
+    },
+  },
+  volume: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: '-100px',
+    marginLeft: '-25px',
+    height: '200px',
+    width: '50px',
+    borderRadius: '25px',
+    overflow: 'hidden',
+    zIndex: 55,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    transition: 'opacity 0.2s',
+  },
+  volumeSlider: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+  },
+  hidden: {
+    opacity: 0,
+  }
 });
 
-const slideOut = css.keyframes({
-  '100%': { transform: 'translateY(-100%)' },
-});
+// const videos = [
+//     { id: 'rnlCGw-0R8g' },
+//     { id: 'zw47_q9wbBE' },
+//     { id: '7m6J8W6Ib4w' },
+//     { id: 'l7uuTnk69Eo' },
+//     { id: '6ZfuNTqbHE8' },
+//     { id: '_8w9rOpV3gc' },
+//     { id: 'c-SE2Qeqj1g' },
+//     { id: '-AbaV3nrw6E' },
+//     { id: 'FTPmnZVgDjQ' },
+//     { id: 'dQw4w9WgXcQ' },
+//     { id: 'Xnk4seEHmgw' },
+//     { id: '5G1C3aBY62E' }
+// ]
 
-const Wrapper = glamorous.div(props => ({
-  animation: props.isMounted ? `${slideOut} 2.5s` : `${fadeIn} 1.5s`,
-  position: 'absolute',
-  top: '0px',
-  left: '0px',
-  width: '100vw',
-  height: '100vh',
-  zIndex: 5
-}));
-
-// List of videos (from videvo)
+// Videos from videvo
 const videos = [
   'video (1).m4v',
   'video (2).m4v',
@@ -65,180 +248,76 @@ const videos = [
   'video (12).m4v',
 ];
 
-// Component code
+const opts = {
+  height: '350',
+  width: '500',
+  playerVars: { // https://developers.google.com/youtube/player_parameters
+    autoplay: 0,
+    controls: 0
+  }
+};
+
+const fadeIn = css.keyframes({
+  '0%': { opacity: 0 },
+  '100%': { opacity: 1 }
+});
+const slideOut = css.keyframes({
+  '100%': { transform: 'translateY(-100%)' },
+});
+const Wrapper = glamorous.div(props => ({
+  animation: props.isMounted ? `${slideOut} 2.5s` : `${fadeIn} 1.5s`,
+  position: 'absolute',
+  top: '0px',
+  left: '0px',
+  width: '100vw',
+  height: '100vh',
+  zIndex: 5
+}));
+
+
 class VideosApp extends Component {
   constructor(props) {
     super(props);
-
-    let videosRefs = videos.map(_ => createRef());
-    let fullScreenVideosRefs = videos.map(_ => createRef());
-
     this.state = {
-      videosRefs: videosRefs,
-      fullScreenVideosRefs: fullScreenVideosRefs,
       playing: false,
       zoomed: -1,
       hovered: -1,
       index: 0,
       exit: false,
-      volume: 0.5,
+      volume: 1,
       displayVolume: false,
-      indexFinger: "",
-      pause: 4,
-      pauseStatic: 4,
     };
-    // Gesture handler
-    this.gestureHandler = new GestureHandler();
-
-    // Timeouts & intervals
+    this.videosRefs = videos.map(_ => createRef());
+    this.fullScreenVideosRefs = videos.map(_ => createRef());
     this.volumeTimeout = undefined;
-    this.gestureInterval = undefined;
-
   }
 
   componentDidMount() {
-    this.gestureHandler.registerGestures('dynamic', ['rhand_lswipe', 'rhand_rswipe', 'rhand_uswipe', 'rindex_airtap']);
-    this.gestureHandler.addEventListener('gesture', (event) => {
-      let { zoomed, hovered } = this.state;
-      let gesture = event.gesture;
-      if (gesture.type === 'dynamic') {
-        console.log(gesture.name);
-        this.setState({ pause: 4 });
+    //google home
+    currentRef.update({ "current": "videos" });
+    var something = this;
+    currentRef.on('value', function (snapshot) {
+      console.log(snapshot.val());
+      var db = snapshot.val();
+      var name = db.goto;
+      if (db.update) {
+        if (name === "home") {
+          something.setState({ exit: true });
+          currentRef.update({ "update": false });
+        }
       }
-      switch (gesture.name) {
-        case 'rhand_lswipe': {
-          this.handleSwipe("left");
-          break;
-        }
-        case 'rhand_rswipe': {
-          this.handleSwipe("right");
-          break;
-        }
-        case 'rhand_uswipe': {
-          this.handleSwipeUp();
-          break;
-        }
-        case 'rindex_airtap': {
-          if (hovered !== -1 && zoomed === -1) { // zoom in
-            this.handleZoom(hovered);
-          } else if (zoomed !== -1) {  // play video
-            this.handleClick(zoomed);
-          }
-          break;
-        }
-        case 'point-index': {
-          if (zoomed !== -1) {
-            this.handleIndex(zoomed, gesture.data.translation);
-          }
-          break;
-        }
-        default:
-          console.log(`No action associated to '${gesture.name}' gesture.`)
+      if (db.back) {
+        something.setState({ exit: true });
+        currentRef.update({ "back": false });
       }
+
     });
-    this.gestureHandler.addEventListener('frame', (event) => {
-      if (event.frame.fingers.length != 0) {
-        this.setState({ hand: true });
-      } else {
-        this.setState({ hand: false });
-      }
-      this.traceFingers(event.frame.fingers);
-    });
-    this.gestureHandler.connect();
-    this.gestureInterval = setInterval(() => {
-      if (this.state.pause > 0) {
-        this.setState({ pause: this.state.pause - 1 });
-      }
-      if (this.state.hand) {
-        var { zoomed, hovered } = this.state;
-        if (zoomed === -1) {
-          hovered = this.checkHover();
-          this.setState({ hovered });
-          this.handleHover(hovered);
-        }
-      }
-    }, 100);
   }
 
   componentWillUnmount() {
     clearTimeout(this.volumeTimeout);
-    clearInterval(this.gestureInterval);
-    this.gestureHandler.removeEventListeners();
-    this.gestureHandler.disconnect();
   }
 
-  traceFingers(pointables) {
-    try {
-      // TODO: make canvas and ctx global
-      const canvas = this.refs.canvas;
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const { pause } = this.state;
-
-      pointables.forEach((pointable) => {
-        const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
-        const normalized = pointable.normalizedPosition;
-        const x = ctx.canvas.width * normalized[0];
-        const y = ctx.canvas.height * (1 - normalized[1]);
-        const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
-        this.drawCircle([x, y], radius, color, pointable.type === 1);
-
-        if (pointable.type === 1 && pointable.hand === 'right') {
-          this.setState({
-            indexFinger: { x, y, vel: pointable.tipVelocity[2] }
-          })
-        }
-      });
-    } catch (err) {
-      // console.log("ERR", err);
-    }
-  }
-
-  drawCircle(center, radius, color, fill) { //draws a circle
-    const canvas = this.refs.canvas;
-    const ctx = canvas.getContext("2d");
-    ctx.beginPath();
-    ctx.arc(center[0], center[1], radius, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.lineWidth = 10;
-    if (fill) {
-      ctx.fillStyle = color;
-      ctx.fill();
-    } else {
-      ctx.strokeStyle = color;
-      ctx.stroke();
-    }
-  }
-
-  checkHover() {
-    const { videosRefs, fullScreenVideosRefs, indexFinger, zoomed } = this.state;
-    const { x, y } = indexFinger;
-    let refs = zoomed === -1 ? videosRefs : fullScreenVideosRefs;
-    // don't check for hovering while zoomed in
-    if (zoomed === -1) {
-      for (let i = 0; i < refs.length; i++) {
-        if (refs[i]) {
-          const videoNode = ReactDOM.findDOMNode(refs[i].current);
-          if (videoNode !== null) {
-            const dims = videoNode.getBoundingClientRect();
-            if (x > dims.left && x < dims.right &&
-              y > dims.top - videoSizeOffset && y < dims.bottom + videoSizeOffset) {
-              // console.log("HOVER", String(i + 1));
-              // console.log(videos[i].props);
-              return i;
-            }
-          }
-        }
-      }
-    }
-    // console.log("HOVER NONE");
-    return -1;
-  }
-
-  // Handlers
   handleHover = (videoId) => {
     this.setState({ hovered: videoId })
   }
@@ -289,18 +368,16 @@ class VideosApp extends Component {
   }
 
   handleZoom = (videoId) => {
-    this.gestureHandler.registerGestures('static', 'point-index');
     this.setState({ zoomed: videoId, hovered: -1 });
   }
 
   handleIndex = (videoId, translation) => {
-    const { fullScreenVideosRefs } = this.state;
     const threshold = 0.5;
     const ratio = 3;
     if (Math.abs(translation[0]) > threshold || Math.abs(translation[1]) > threshold) {
       if (Math.abs(translation[0]) > ratio * Math.abs(translation[1])) {
         // Move in the video
-        let videoRef = fullScreenVideosRefs[videoId];
+        let videoRef = this.fullScreenVideosRefs[videoId];
         const adjustment = videoRef.current.getDuration() / (3 * 60);
         let seconds = videoRef.current.getCurrentTime() - Math.round(translation[0]) * adjustment;
         videoRef.current.seekTo(seconds, 'seconds');
@@ -322,7 +399,6 @@ class VideosApp extends Component {
   handleSwipeUp = () => {
     let { zoomed } = this.state;
     if (zoomed != -1) {
-      this.gestureHandler.unregisterGestures('static', 'point-index');
       this.setState({ 
         playing: false, 
         zoomed: -1 
@@ -334,7 +410,7 @@ class VideosApp extends Component {
 
   renderVideo(index) {
     const { classes } = this.props;
-    const { hovered, videosRefs } = this.state;
+    const { hovered } = this.state;
 
     return (
       <div className={classes.videoPreviewContainer}>     
@@ -342,11 +418,11 @@ class VideosApp extends Component {
           <ReactPlayer 
             className={classes.reactPlayer} 
             width='100%' height='100%' 
-            ref={videosRefs[index]} 
+            ref={this.videosRefs[index]} 
             url={`/videos/${videos[index]}`} 
             onMouseEnter={() => { this.setState({ hovered: index }) }}
             onMouseLeave={() => { this.setState({ hovered: -1 }) }}
-            onClick={() => { this.handleZoom(index) }} 
+            onClick={() => { this.setState({ zoomed: index }) }} 
           />
         </AspectRatio>
       </div>);
@@ -391,7 +467,7 @@ class VideosApp extends Component {
 
   renderFullScreenVideo(index) {
     const { classes } = this.props;
-    const { volume, playing, zoomed, fullScreenVideosRefs } = this.state;
+    const { volume, playing, zoomed } = this.state;
 
     return (
       <div className={classes.carousel} justify={"center"}>
@@ -402,7 +478,7 @@ class VideosApp extends Component {
               playing={playing && zoomed === index} 
               volume={volume}
               width='100%' height='100%' 
-              ref={fullScreenVideosRefs[index]} 
+              ref={this.fullScreenVideosRefs[index]} 
               url={`/videos/${videos[index]}`} 
               controls={true} 
               onStart={() => this.setState({ playing: true })}
@@ -471,10 +547,17 @@ class VideosApp extends Component {
     return (
       <Wrapper isMounted={this.props.isMounted} exit={this.state.exit}>
         <div className={classes.container}>
-          {/* Display fingers */}
-          <canvas className={classes.canvas} ref="canvas"></canvas>
+          <Leap
+            videos={zoomed === -1 ? this.videosRefs : this.fullScreenVideosRefs}
+            handleHover={this.handleHover}
+            handleSwipe={this.handleSwipe}
+            handleSwipeUp={this.handleSwipeUp}
+            handleClick={this.handleClick}
+            handleZoom={this.handleZoom}
+            handleIndex={this.handleIndex}
+          />
 
-          {/* Handling whether to render a full screen video or not */}
+          {/* Handling whether to render a full screen photo or not */}
           <div className={classes.maincontent}>
             { zoomed != -1 ? this.renderFullScreen(zoomed) : this.renderVideos() }
           </div>

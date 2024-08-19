@@ -181,7 +181,8 @@ class MapsApp extends Component {
                   attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <Marker position={[51.505, -0.09]}></Marker>
+                <Marker position={[50.6495196, 4.5672765]}></Marker>
+                <Marker position={[50.6495196, 4.5552765]}></Marker>
               </MapContainer>
             </div>
 

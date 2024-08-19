@@ -4,6 +4,7 @@ import { Redirect } from 'react-router';
 import { withStyles } from '@material-ui/core/styles';
 import glamorous from 'glamorous'
 import classNames from 'classnames';
+import Leap from './leap.js';
 import { Grid } from '@material-ui/core';
 import SwipeableViews from 'react-swipeable-views';
 import MobileStepper from '@material-ui/core/MobileStepper';
@@ -14,26 +15,207 @@ import Home from '@material-ui/icons/Home';
 import Clear from '@material-ui/icons/Clear';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
+
 import { css } from 'glamor';
-import { styles } from './styles';
-import GestureHandler from 'quantumleapjs';
+//firebase
+import firebase from 'firebase/app'
+import "firebase/database";
 
-// Fingers styling
-const fingers = ["#9bcfedBB", "#B2EBF2CC", "#80DEEABB", "#4DD0E1BB", "#26C6DABB"];
-const left_fingers = ["#d39bed", "#e1b1f1", "#ca80ea", "#b74ce1", "#a425da"];
-const paused_fingers = ["#9bed9b", "#b1f0b1", "#80ea80", "#4ce14c", "#25da25"];
-const pausedStatic_fingers = ["#ee0231", "#e50b36", "#dc143c", "#d31d42", "#ca2647"];
+const zoomIn = css.keyframes({
+  '0%': { transform: 'scale(0.5)' },
+  '100%': { transform: 'scale(1)' }
+})
 
-// Animations entering/exiting this page:
+//CSS:
+const styles = {
+
+  gallery: {
+    animation: `${zoomIn} 1s`,
+    width: '100%',
+    height: '100%',
+  },
+
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'absolute',
+    top: '0px',
+    left: '0px',
+    width: '100%',
+    height: '100%',
+    padding: '0px',
+    listStyle: 'none',
+    overflow: 'hidden',
+    zIndex: '1',
+    backgroundColor: '#CFD8DC',
+  },
+
+  carousel: {
+    width: '100%',
+    height: '100%',
+    padding: '0px',
+    margin: '0px',
+    overflow: 'hidden',
+  },
+
+  row: {
+    height: '50%',
+  },
+
+  fullScreenContainer: { 
+    height: '100%', 
+    width: '100%', 
+    overflow: 'hidden',
+  },
+
+  imageBox: {
+    height: '100%',
+    width: '100%',
+    display: 'flex', 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    alignItems: 'center',
+  },
+
+  cell: {
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center', 
+    alignItems: 'center',
+  },
+
+  image: {
+    display: 'block',
+    boxSizing: 'border-box',
+    maxWidth: '90%',
+    maxHeight: '60%',
+    width: 'auto',
+    height: 'auto',
+    margin: 'auto',
+    padding: '3%',
+    border: 'none',
+    transform: 'scale(1)',
+    transition: 'all 0.4s',
+    boxShadow: '0px 0px 10px 2px #999',
+    backgroundColor: "#ECEFF1",
+    position: "relative",
+    zIndex: '1'
+  },
+
+  hovered: {
+    transform: 'scale(1.5)',
+    animationDuration: '0.1s',
+    zIndex: '15 !important',
+    cursor: 'pointer',
+  },
+
+  zoomed: {
+    display: 'block',
+    boxSizing: 'border-box',
+    width: 'auto',
+    height: 'auto',
+    margin: 'auto',
+    padding: '30px',
+    border: 'none',
+    transform: 'scale(1)',
+    boxShadow: '0px 0px 10px 2px #999',
+    backgroundColor: "#ECEFF1",
+    position: "relative",
+    zIndex: '1',
+    maxHeight: '90%',
+    maxWidth: '90%'
+  },
+
+  transition: {
+    transition: 'all 0.2s',
+  },
+
+  dots: {
+    margin: 'auto',
+  },
+
+  maincontent: {
+    position: 'absolute',
+    bottom: '50px',
+    top: '50px',
+    left: 0,
+    right: 0,
+    overflow: 'hidden'
+  },
+
+  contentContainer: {
+    width: '100%', 
+    height: '100%',
+  },
+
+  controlbar: {
+    boxSizing: 'border-box',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 0,
+    padding: '5px',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50px'
+  },
+
+  buttons: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+
+  stepper: {
+    margin: 'auto',
+    width: 'fit-content',
+    maxWidth: '100%',
+    backgroundColor: 'rgb(0,0,0,0)',
+  },
+
+  button: {
+    color: "rgba(50,50,50,0.8)",
+  },
+
+  xbutton: {
+    color: "rgba(50,50,50,0.8)",
+  },
+
+  heartContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: '-100px',
+    marginLeft: '-100px',
+    height: '200px',
+    width: '200px',
+    zIndex: 55,
+    transition: 'opacity 0.2s',
+  },
+  heart: {
+    width: '100%',
+    fill: 'red',
+  },
+  hollowHeart: {
+    width: '100%',
+    fill: 'white',
+  },
+  hidden: {
+    opacity: 0,
+  }
+};
+
 const fadeIn = css.keyframes({
   '0%': { opacity: 0 },
   '100%': { opacity: 1 }
-});
-
+})
 const slideOut = css.keyframes({
   '100%': { transform: 'translateY(-100%)' },
-});
+})
 
+//Animations entering/exiting this page:
 const Wrapper = glamorous.div(props => ({
   animation: props.isMounted ? `${slideOut} 2.5s` : `${fadeIn} 1.5s`,
   position: 'absolute',
@@ -42,9 +224,28 @@ const Wrapper = glamorous.div(props => ({
   width: '100vw',
   height: '100vh',
   zIndex: 5
-}));
+}))
+// const photos = ['https://images.unsplash.com/photo-1531752074002-abf991376d04?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=d9a0a2b6b4212fc234d319be9c87c615&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531700968341-bd114e5006ec?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=0e3b02f32d781454cb7f97a78657a5b4&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533247094082-709d7257cb7b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=03d0175eccb69353cf2cc77869902e4f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533213603451-060f6ec38bfa?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4d961f9dbe9795f95febb3743a89d14d&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531574595918-cb77c99fe5e2?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=ad5b61555629bdf87c0dd87b4a383ff1&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533135347859-2d07f6e8199b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=eb46a125e61ce38dc70712cefc7cb147&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533071581733-1a1600ec8ac6?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a59d7ee412d9efb4818bb4a9ddd55c9&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533213603451-060f6ec38bfa?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4d961f9dbe9795f95febb3743a89d14d&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531574595918-cb77c99fe5e2?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=ad5b61555629bdf87c0dd87b4a383ff1&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533135347859-2d07f6e8199b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=eb46a125e61ce38dc70712cefc7cb147&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533071581733-1a1600ec8ac6?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4a59d7ee412d9efb4818bb4a9ddd55c9&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531752074002-abf991376d04?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=d9a0a2b6b4212fc234d319be9c87c615&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531700968341-bd114e5006ec?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=0e3b02f32d781454cb7f97a78657a5b4&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1533247094082-709d7257cb7b?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=03d0175eccb69353cf2cc77869902e4f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60',
+//                 'https://images.unsplash.com/photo-1531686888376-83ee7d64f5eb?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=2d03c403992f2433e3bc7900db49834f&auto=format&fit=crop&w=800&q=60']
 
-// List of photos
 const photos = [
   'photo (1).jpg',
   'photo (2).jpg',
@@ -58,9 +259,27 @@ const photos = [
   'photo (10).jpg',
   'photo (11-2).jpg',
   'photo (12).jpg',
-];
+]
 
-// Component code
+//firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDjM37_DSv2RvPQzl5YiVzmgRHfpd4rJFU",
+  authDomain: "lui-medialab.firebaseapp.com",
+  databaseURL: "https://lui-medialab.firebaseio.com",
+  projectId: "lui-medialab",
+  storageBucket: "lui-medialab.appspot.com",
+  messagingSenderId: "247289397118",
+  appId: "1:247289397118:web:eb2bcb0076d4bb4d"
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+var database = firebase.database();
+var currentRef = database.ref('voice');
+//end
+
+
 class PhotosApp extends Component {
   constructor(props) {
     super(props);
@@ -82,199 +301,77 @@ class PhotosApp extends Component {
       rotation: 0,
       transition: false,
       zoom: 1.0,
-      translation: { x: 0.0, y: 0.0 },
-      indexFinger: "",
-      pause: 4,
-      pauseStatic: 4,
+      translation: { x: 0.0, y: 0.0 }
     };
-    // Gesture handler
-    this.gestureHandler = new GestureHandler();
 
-    // Timeouts & intervals
     this.rotateTimeout = undefined;
+
     this.heartTimeout = undefined;
-    this.gestureInterval = undefined;
 
     this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidMount() {
-    // Gesture recognition
-    this.gestureHandler.registerGestures('dynamic', ['rhand_lswipe', 'rhand_rswipe', 'rhand_uswipe', 'rindex_airtap']);
-    this.gestureHandler.addEventListener('gesture', (event) => {
-      let gesture = event.gesture;
-      if (gesture.type === 'static') {
-        this.setState({ pauseStatic: 4 });
-      } else if (gesture.type === 'dynamic') {
-        console.log(gesture.name);
-        this.setState({ pause: 4 });
+    //google home
+    currentRef.update({"current":"photos"});
+    var something = this;
+    currentRef.on('value', function(snapshot) {
+      var db = snapshot.val();
+      var name = db.goto;
+      if (db.update){
+        if (name === "home") {
+            something.setState({ exit: true });
+            currentRef.update({"update":false});
+        }
+        
       }
-      switch (gesture.name) {
-        case 'rhand_lswipe':
-          this.handleSwipe('left');
-          break;
-        case 'rhand_rswipe':
-          this.handleSwipe('right');
-          break;
-        case 'rhand_uswipe': {
-          this.handleSwipeUp();
-          break;
+      if(db.clicked){
+        currentRef.update({"clicked":false});
+        something.gestureDetected = true;
+        console.log(db.hovered);
+        something.handleClick(db.hovered);
+      }
+      if (db.back){
+        if (something.state.clicked != -1){
+          something.handleSwipeUp();
         }
-        case 'rindex_airtap': {
-          let { clicked, hovered } = this.state;
-          if (clicked == -1 && hovered != -1) {
-            this.handleClick(hovered);
-          }
-          break;
+        else{
+          something.setState({ exit: true });
+            
         }
-        case 'grab':
-          this.handleRotate(gesture.data.rotation);
-          break;
-        case 'pinch':
-          this.handlePinch(gesture.data.pinch, gesture.data.translation);
-          break;
-        case 'thumb': {
-          let thumbUp = gesture.data.thumbVector[1] > 40;
-          let thumbDown = gesture.data.thumbVector[1] < -40;
-          if (thumbUp) {
-            this.handleThumb(true);
-          }
-          if (thumbDown) {
-            this.handleThumb(false);
-          }
-          break;
-        }
-        default:
-          console.log(`No action associated to '${gesture.name}' gesture.`)
+        currentRef.update({"back":false});
       }
     });
-    this.gestureHandler.addEventListener('frame', (event) => {
-      if (event.frame.fingers.length != 0) {
-        this.setState({ hand: true });
-      } else {
-        this.setState({ hand: false });
-      }
-      this.traceFingers(event.frame.fingers);
-    });
-    this.gestureHandler.connect();
-    this.gestureInterval = setInterval(() => {
-      if (this.state.pause > 0) {
-        this.setState({ pause: this.state.pause - 1 });
-      }
-      if (this.state.pauseStatic > 0) {
-        this.setState({ pauseStatic: this.state.pauseStatic - 1 })
-      }
-      if (this.state.hand) {
-        var { clicked, hovered } = this.state;
-        if (clicked == -1 && !this.state.amiclicked) {
-          hovered = this.checkHover();
-          this.setState({ hovered });
-          this.handleHover(hovered);
-        }
-      }
-    }, 100);
   }
 
   componentWillUnmount() {
     clearTimeout(this.heartTimeout);
-    clearTimeout(this.rotateTimeout);
-    clearInterval(this.gestureInterval);
-    this.gestureHandler.removeEventListeners();
-    this.gestureHandler.disconnect();
   }
 
-  traceFingers(pointables) {
-    try {
-      // TODO: make canvas and ctx global
-      const canvas = this.refs.canvas;
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const { pause } = this.state;
-      const { pauseStatic } = this.state;
-      pointables.forEach((pointable) => {
-        let color = fingers[pointable.type];
-        if (pause) {
-          color = paused_fingers[pointable.type];
-        } else if (pauseStatic) {
-          // color = pausedStatic_fingers[pointable.type];                
-        }
-        //const color = pause > 0 ? paused_fingers[pointable.type] : fingers[pointable.type];
-        const normalized = pointable.normalizedPosition;
-        const x = ctx.canvas.width * normalized[0];
-        const y = ctx.canvas.height * (1 - normalized[1]);
-        const radius = Math.min(20 / Math.abs(pointable.touchDistance), 50);
-        this.drawCircle([x, y], radius, color, pointable.type === 1);
-
-        if (pointable.type === 1 && pointable.hand === 'right') {
-          this.setState({
-            indexFinger: { x, y, vel: pointable.tipVelocity[2] }
-          })
-        }
-      });
-    } catch (err) {
-      // console.log("ERR", err);
-    }
-  }
-
-  drawCircle(center, radius, color, fill) { //draws a circle
-    const canvas = this.refs.canvas;
-    const ctx = canvas.getContext("2d");
-    ctx.beginPath();
-    ctx.arc(center[0], center[1], radius, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.lineWidth = 10;
-    if (fill) {
-      ctx.fillStyle = color;
-      ctx.fill();
-    } else {
-      ctx.strokeStyle = color;
-      ctx.stroke();
-    }
-  }
-
-  checkHover() { //returns which photo is hovered
-    const { photoRefs, indexFinger } = this.state;
-    const { x, y } = indexFinger;
-    for (let i = 0; i < photoRefs.length; i++) {
-      if (photoRefs[i] && photoRefs[i].current) {
-        const dims = photoRefs[i].current.getBoundingClientRect();
-        if (x > dims.left && x < dims.right &&
-          y > dims.top && y < dims.bottom) {
-          return i;
-        }
-      }
-    }
-    return -1;
-  }
-
-  // Handlers
-  rotate() {
+  rotate(){
     clearTimeout(this.rotateTimeout);
     let newRotation = this.state.rotation + 90;
-    if (newRotation >= 360) {
-      newRotation = - 360;
+    if(newRotation >= 360){
+      newRotation =- 360;
     }
     this.setState({
       rotation: newRotation,
-    });
+    })
   }
 
   handleHover = (photo) => {
-    this.setState({ hovered: photo });
+    this.setState({ hovered: photo })
+    currentRef.update({"hovered": photo}); 
   }
 
   handleClick = (photoId) => {
-    this.gestureHandler.registerGestures('static', ['grab', 'pinch', 'thumb']);
-    this.setState({ clicked: photoId, hovered: -1, rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } });
+    this.setState({ clicked: photoId, rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } })
   }
 
   handleExit = () => {
     this.setState({
       exit: true
-    });
+    })
   }
 
   handleRotate = (handRotation) => {
@@ -282,7 +379,7 @@ class PhotosApp extends Component {
     clearTimeout(this.rotateTimeout);
     let newRotation = Math.round((rotation + 180 * handRotation / 3.14) * 10) / 10;
     if (newRotation !== rotation) {
-      this.setState({
+      this.setState({ 
         rotation: newRotation,
       });
     }
@@ -301,7 +398,7 @@ class PhotosApp extends Component {
 
   handlePinch = (pinch, handTranslation) => {
     if (this.state.clicked != -1) {
-      this.setState(prevState => {
+      this.setState(prevState => { 
         let zoom = Math.round((prevState.zoom * (((pinch - 1) * 1.2) + 1)) * 50) / 50;
         if (zoom < 0.4) {
           zoom = 0.4;
@@ -337,8 +434,8 @@ class PhotosApp extends Component {
   }
 
   handleSwipe = (dir) => {
-    let { clicked, photoRefs, index, numPreviewPages } = this.state;
-    this.setState({ rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } })
+    let { clicked, photoRefs, index, numPreviewPages } = this.state; 
+    this.setState({ rotation: 0, zoom: 1.0, translation: { x: 0.0, y: 0.0 } })    // Added - rotation
     if (dir === "left") {
       if (clicked != -1) {
         this.setState({ clicked: Math.min(photoRefs.length - 1, clicked + 1) })
@@ -371,7 +468,6 @@ class PhotosApp extends Component {
   handleSwipeUp = () => {
     let { clicked } = this.state;
     if (clicked != -1) {
-      this.gestureHandler.unregisterGestures('static', ['grab', 'pinch', 'thumb']);
       this.setState({ clicked: -1 });
     } else {
       this.setState({ exit: true });
@@ -543,8 +639,17 @@ class PhotosApp extends Component {
     return (
       <Wrapper isMounted={this.props.isMounted} exit={this.state.exit}>
           <div className={classes.container} justify={"center"}>
-            {/* Display fingers */}
-            <canvas className={classes.canvas} ref="canvas"></canvas>
+            <Leap
+              photos={this.state.photoRefs}
+              handleHover={this.handleHover}
+              handleClick={this.handleClick}           
+              handleSwipe={this.handleSwipe}
+              handleSwipeUp={this.handleSwipeUp}
+              handleRotate={this.handleRotate}
+              handlePinch={this.handlePinch}
+              handleTranslate={this.handleTranslate}
+              handleThumb={this.handleThumb}
+            />
 
             {/* Handling whether to render a full screen photo or not */}
             <div className={classes.maincontent}>
