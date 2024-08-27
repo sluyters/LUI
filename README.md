@@ -4,3 +4,5 @@ With the rise of augmented and virtual reality, new interactive technologies are
 
 ## Changes in this fork
 This fork is meant to work with the `QuantumLeap framework`, [accessible here](https://github.com/sluyters/QuantumLeap). To use it, download and start the framework. In the QuantumLeap GUI, import the `config.json` file from this repository and restart QuantumLeap. Then, download and start this version of LUI. 
+
+This branch includes modifications to simplify the UX evaluation of LUI. It should be combined with the `LUI-Evaluation-Helper`, [accessible here](https://github.com/sluyters/LUI-Evaluation-Helper).
