@@ -263,9 +263,9 @@ class App extends Component {
               onClick={() => { this.setState({ clicked: "card5" }) }}
               onMouseEnter={() => { this.setState({ hovered: "card5" }) }}
               onMouseLeave={() => { this.setState({ hovered: "" }) }} >
-              <DicomViewer hovered={this.state.hovered === "card5"} clicked={this.state.clicked === "card5"} />
+              {/* <DicomViewer hovered={this.state.hovered === "card5"} clicked={this.state.clicked === "card5"} /> */}
               {/* <GestureKeyboard hovered={this.state.hovered === "card5"} clicked={this.state.clicked === "card5"} /> */}
-              {/* <GestureKeyboard hovered={false} clicked={false} /> */}
+              <DicomViewer hovered={false} clicked={false} />
             </Grid>
             <Grid ref="card6" item xs={4}
               onClick={() => { this.setState({ clicked: "card6" }) }}

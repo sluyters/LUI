@@ -96,9 +96,42 @@ class PhotosApp extends Component {
     this.gestureInterval = undefined;
 
     this.handleClick = this.handleClick.bind(this);
+
+    this.evaluationHelper = this.evaluationHelper.bind(this);
+  }
+
+  evaluationHelper(props) {
+    const searchString = props.location.search;
+    const searchParams = new URLSearchParams(searchString);
+    if (searchParams.has("clicked")) {
+      let clicked = parseInt(searchParams.get("clicked"));
+      if (clicked === -1) {
+        if (this.state.clicked !== -1) {
+          this.handleSwipeUp();
+        }
+        if (searchParams.has("page")) {
+          this.setState({ index: parseInt(searchParams.get("page")) });
+        }
+      } else {
+        this.handleClick(clicked);
+        if (searchParams.has("favorite")) {
+          this.setState(prevState => ({
+            liked: {
+              ...prevState.liked,
+              [clicked]: searchParams.get("favorite") === "true",
+            }
+          }));
+        }
+      }
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.evaluationHelper(nextProps);
   }
 
   componentDidMount() {
+    this.evaluationHelper(this.props);
     // Gesture recognition
     this.gestureHandler.registerGestures('dynamic', ['rhand_lswipe', 'rhand_rswipe', 'rhand_uswipe', 'rindex_airtap']);
     this.gestureHandler.addEventListener('gesture', (event) => {
@@ -308,11 +341,17 @@ class PhotosApp extends Component {
         } else if (zoom > 4) {
           zoom = 4;
         }
-        let translation = {
-          x: prevState.translation.x + handTranslation[0] * 5,
-          y: prevState.translation.y + handTranslation[1] * -5,
+        if (Math.abs(handTranslation[0]) < 20 && Math.abs(handTranslation[1]) < 20) {
+          let translation = {
+            x: prevState.translation.x + handTranslation[0] * 5,
+            y: prevState.translation.y + handTranslation[1] * -5,
+          }
+          return { zoom, translation };
+        } else {
+          console.log(handTranslation[0])
+          return { zoom };
         }
-        return { zoom, translation };
+        
       });
     }
   }

@@ -94,9 +94,53 @@ class VideosApp extends Component {
     this.volumeTimeout = undefined;
     this.gestureInterval = undefined;
 
+    this.evaluationHelper = this.evaluationHelper.bind(this);
+  }
+
+  evaluationHelper(props) {
+    const searchString = props.location.search;
+    const searchParams = new URLSearchParams(searchString);
+    if (searchParams.has("clicked")) {
+      let clicked = parseInt(searchParams.get("clicked"));
+      if (clicked === -1) {
+        if (this.state.zoomed !== -1) {
+          this.handleSwipeUp();
+        }
+        if (searchParams.has("page")) {
+          this.setState({ index: parseInt(searchParams.get("page")) });
+        }
+      } else {
+        this.handleZoom(clicked);
+        if (searchParams.has("play")) {
+          this.setState(prevState => ({ playing: searchParams.get("play") === "true" }))
+        }
+        if (searchParams.has("progress")) {
+          this.setState(prevState => ({ playing: searchParams.get("play") === "true" }))
+          let videoRef = this.state.fullScreenVideosRefs[clicked];
+          
+          let helperInterval = setInterval(_ => {
+            if (videoRef.current && videoRef.current.getCurrentTime() !== null) {
+              clearInterval(helperInterval);
+              videoRef.current.seekTo(parseInt(searchParams.get("progress")) / 100);
+            }
+          }, 100)
+        }
+        if (searchParams.has("volume")) {
+          this.setState(prevState => ({
+            volume: parseInt(searchParams.get("volume")) / 100, 
+          }));
+        }
+      }
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.evaluationHelper(nextProps);
   }
 
   componentDidMount() {
+    this.evaluationHelper(this.props);
+
     this.gestureHandler.registerGestures('dynamic', ['rhand_lswipe', 'rhand_rswipe', 'rhand_uswipe', 'rindex_airtap']);
     this.gestureHandler.addEventListener('gesture', (event) => {
       let { zoomed, hovered } = this.state;

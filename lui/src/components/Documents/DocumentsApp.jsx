@@ -96,9 +96,38 @@ class DocumentsApp extends Component {
     this.gestureInterval = undefined;
 
     this.handleClick = this.handleClick.bind(this);
+
+    this.evaluationHelper = this.evaluationHelper.bind(this);
+  }
+
+  evaluationHelper(props) {
+    const searchString = props.location.search;
+    const searchParams = new URLSearchParams(searchString);
+    if (searchParams.has("clicked")) {
+      let clicked = parseInt(searchParams.get("clicked"));
+      if (clicked === -1) {
+        if (this.state.clicked !== -1) {
+          this.handleSwipeUp();
+        }
+        if (searchParams.has("page")) {
+          this.setState({ index: parseInt(searchParams.get("page")) });
+        }
+      } else {
+        this.handleClick(clicked);
+        if (searchParams.has("page")) {
+          this.setState({ currentPage: parseInt(searchParams.get("page")) });
+        }
+      }
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.evaluationHelper(nextProps);
   }
 
   componentDidMount() {
+    this.evaluationHelper(this.props);
+
     this.gestureHandler.registerGestures('dynamic', ['rhand_lswipe', 'rhand_rswipe', 'rhand_uswipe', 'rindex_airtap']);
     this.gestureHandler.addEventListener('gesture', (event) => {
       let gesture = event.gesture;

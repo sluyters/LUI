@@ -139,11 +139,13 @@ class MapsApp extends Component {
   }
 
   handleTranslate = (handTranslation) => {
-    let translation = [
-      handTranslation[0] * -50,
-      handTranslation[1] * 50
-    ];
-    this.map.panBy(translation);
+    if (Math.abs(handTranslation[0]) < 20 && Math.abs(handTranslation[1]) < 20) {
+      let translation = [
+        handTranslation[0] * -50,
+        handTranslation[1] * 50
+      ];
+      this.map.panBy(translation);
+    }
   }
 
   handleThumb = (isUp) => {

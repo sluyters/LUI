@@ -68,8 +68,8 @@ const styles = {
     bottom: '10px',
     left: '10px',
     zIndex: 10,
-    color: "rgba(255,255,255,1)",
-    backgroundColor: "rgba(255,255,255,0.5)"
+    color: "rgba(255,255,255,0.3)",
+    backgroundColor: "rgba(255,255,255,0.1)"
   },
 };
 
